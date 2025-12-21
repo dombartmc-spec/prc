@@ -1330,6 +1330,7 @@ function renderStageResults() {
     const rIdx = parseInt(document.getElementById('res-round-select').value);
     const sIdx = parseInt(document.getElementById('res-stage-select').value);
     
+    // Pobierz wszystkie wyniki dla danego odcinka
     const filtered = state.results.filter(res => res.r === rIdx && res.s === sIdx);
     
     if(filtered.length === 0) {
@@ -1337,82 +1338,134 @@ function renderStageResults() {
         return;
     }
 
-    // Sortowanie: normalne czasy na początku, potem DNF, potem DSQ
-    filtered.sort((a,b) => {
-        if (a.time === "DSQ") return 1;
-        if (b.time === "DSQ") return -1;
-        if (a.time === "DNF") return 1;
-        if (b.time === "DNF") return -1;
-        return a.ms - b.ms;
-    });
-    
-    // Znajdź zwycięzcę (pierwszy nie-DSQ/DNF)
-    const winner = filtered.find(res => res.time !== "DSQ" && res.time !== "DNF");
-    const winnerMs = winner ? winner.ms : 0;
+    // Podziel wyniki na grupy
+    const normalResults = [];
+    const dnfResults = [];
+    const dsqResults = [];
 
-    filtered.forEach((res, i) => {
+    filtered.forEach(res => {
+        if (res.time === "DSQ") {
+            dsqResults.push(res);
+        } else if (res.time === "DNF") {
+            dnfResults.push(res);
+        } else {
+            normalResults.push(res);
+        }
+    });
+
+    // Znajdź najgorszy czas wśród normalnych wyników (dla obliczenia czasu DNF)
+    let worstNormalTime = 0;
+    if (normalResults.length > 0) {
+        // Uwaga: normalResults mają czas w milisekundach w polu `ms`
+        worstNormalTime = Math.max(...normalResults.map(res => res.ms));
+    } else {
+        // Jeśli nie ma normalnych, to nie ma punktu odniesienia, ustaw 0
+        worstNormalTime = 0;
+    }
+
+    // Przygotuj tablicę wyników do sortowania
+    const allResults = [];
+
+    // Dla normalnych: computedTime = ms
+    normalResults.forEach(res => {
+        allResults.push({
+            ...res,
+            computedTime: res.ms,
+            type: 'normal'
+        });
+    });
+
+    // Dla DNF: computedTime = worstNormalTime + 20000
+    dnfResults.forEach(res => {
+        allResults.push({
+            ...res,
+            computedTime: worstNormalTime + 20000,
+            type: 'dnf'
+        });
+    });
+
+    // Dla DSQ: computedTime = Infinity (żeby były na końcu)
+    dsqResults.forEach(res => {
+        allResults.push({
+            ...res,
+            computedTime: Infinity,
+            type: 'dsq'
+        });
+    });
+
+    // Sortuj według computedTime
+    allResults.sort((a, b) => a.computedTime - b.computedTime);
+
+    // Znajdź czas zwycięzcy (pierwszy w allResults, który nie jest DSQ? DSQ są na końcu, więc pierwszy to normalny lub DNF)
+    const winner = allResults[0];
+    const winnerTime = winner ? winner.computedTime : 0;
+
+    // Generuj wiersze
+    allResults.forEach((res, index) => {
         const driver = state.drivers.find(d => d.id === res.d);
         if(!driver) return;
-        
-        let diff = '-';
-        let timeDisplay;
-        
-        if (res.time === "DSQ") {
-            timeDisplay = '<span class="status-dsq-text">DSQ</span>';
-            diff = '<span class="status-dsq-text">DSQ</span>';
-        } else if (res.time === "DNF") {
-            // DNF: oblicz rzeczywisty czas (najgorszy + 20 sekund)
-            // Najpierw znajdź najgorszy czas w tym OS-ie
-            let worstTimeInStage = 0;
-            filtered.forEach(otherRes => {
-                if (otherRes.time !== "DSQ" && otherRes.time !== "DNF" && typeof otherRes.ms === 'number') {
-                    worstTimeInStage = Math.max(worstTimeInStage, otherRes.ms);
-                }
-            });
-            
-            const dnfTime = worstTimeInStage + 20000;
-            const totalSeconds = Math.floor(dnfTime / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            const milliseconds = dnfTime % 1000;
-            
-            timeDisplay = `<span class="status-dnf-text">${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')} (DNF)</span>`;
-            diff = '<span class="status-dnf-text">DNF</span>';
+
+        let timeDisplay = '';
+        let diffDisplay = '';
+        let rowClass = 'hover:bg-[#151515] transition-colors border-l-2 border-transparent';
+        let timeClass = '';
+        let diffClass = '';
+
+        if (res.type === 'dsq') {
+            timeDisplay = '<span class="text-red-500 font-bold">DSQ</span>';
+            diffDisplay = '<span class="text-red-500 font-bold">DSQ</span>';
+            rowClass = 'hover:bg-[#151515] transition-colors border-l-2 border-transparent';
+            timeClass = 'text-red-500';
+            diffClass = 'text-red-500';
+        } else if (res.type === 'dnf') {
+            // Formatujemy obliczony czas, ale dodajemy (DNF)
+            const formattedTime = formatTimeForDisplay(res.computedTime); // Uwaga: formatTimeForDisplay oczekuje czasu w ms lub string "DSQ"/"DNF"
+            timeDisplay = `${formattedTime} <span class="text-yellow-500">(DNF)</span>`;
+            // Oblicz różnicę do zwycięzcy
+            if (index === 0) {
+                diffDisplay = '-';
+            } else {
+                const diff = res.computedTime - winnerTime;
+                diffDisplay = `+${String(Math.floor(diff/1000)).padStart(2, '0')}.${String(diff%1000).padStart(3, '0')}`;
+            }
+            rowClass = 'hover:bg-[#151515] transition-colors border-l-2 border-transparent';
+            timeClass = 'text-white';
+            diffClass = 'text-gray-500';
         } else {
+            // Normalny wynik
             timeDisplay = formatTimeForDisplay(res.ms);
-            if (i > 0) {
-                diff = formatTimeDiff(res.ms - winnerMs);
+            if (index === 0) {
+                diffDisplay = '-';
+            } else {
+                const diff = res.ms - winnerTime;
+                diffDisplay = `+${String(Math.floor(diff/1000)).padStart(2, '0')}.${String(diff%1000).padStart(3, '0')}`;
+            }
+            rowClass = 'hover:bg-[#151515] transition-colors border-l-2 border-transparent';
+            if (index === 0) {
+                rowClass = 'bg-zinc-200 text-black';
+                timeClass = 'text-black font-bold';
+                diffClass = 'text-gray-800';
+            } else {
+                timeClass = 'text-white';
+                diffClass = 'text-gray-500';
             }
         }
-        
-        const isWinner = i === 0 && res.time !== "DSQ" && res.time !== "DNF";
-        const isDSQ = res.time === "DSQ";
-        const isDNF = res.time === "DNF";
-        
-        const tr = document.createElement('tr');
-        if (isDSQ) {
-            tr.className = "status-dsq";
-        } else if (isDNF) {
-            tr.className = "status-dnf";
-        } else if (isWinner) {
-            tr.className = "bg-zinc-200 text-black";
-        } else {
-            tr.className = "hover:bg-[#151515] transition-colors border-l-2 border-transparent text-gray-300";
-        }
-        
+
         const bonusPoints = (res.time === "DSQ" || res.time === "DNF") ? '0' : `+${res.cp}`;
-        
+
+        const tr = document.createElement('tr');
+        tr.className = rowClass;
+
         tr.innerHTML = `
-            <td class="py-3 pl-4 text-sm ${isWinner ? 'text-black font-bold' : (isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-gray-500'))}">${i+1}</td>
-            <td class="py-3 font-bold font-mono ${isWinner ? 'text-black' : (isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-gray-300'))}">${driver.name}</td>
-            <td class="py-3 text-right font-mono tracking-wide ${isWinner ? 'text-black font-bold' : (isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-white'))}">${timeDisplay}</td>
-            <td class="py-3 text-right text-sm font-mono ${isWinner ? 'text-gray-800' : (isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-gray-500'))}">${diff}</td>
-            <td class="py-3 text-right pr-4 font-mono text-sm ${isWinner ? 'text-gray-800' : (isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-gray-400'))}">${bonusPoints}</td>
+            <td class="py-3 pl-4 text-sm ${index === 0 && res.type !== 'dsq' && res.type !== 'dnf' ? 'text-black font-bold' : 'text-gray-500'}">${index+1}</td>
+            <td class="py-3 font-bold font-mono ${index === 0 && res.type !== 'dsq' && res.type !== 'dnf' ? 'text-black' : 'text-gray-300'}">${driver.name}</td>
+            <td class="py-3 text-right font-mono tracking-wide ${timeClass}">${timeDisplay}</td>
+            <td class="py-3 text-right text-sm font-mono ${diffClass}">${diffDisplay}</td>
+            <td class="py-3 text-right pr-4 font-mono text-sm ${index === 0 && res.type !== 'dsq' && res.type !== 'dnf' ? 'text-gray-800' : 'text-gray-400'}">${bonusPoints}</td>
         `;
         tbody.appendChild(tr);
     });
 }
-
         function getRoundStandings(roundIndex) {
             const driverTimes = [];
             
@@ -2791,6 +2844,7 @@ function renderStageResults() {
     </script>
 </body>
 </html>
+
 
 
 
