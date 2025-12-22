@@ -224,6 +224,17 @@
             color: #f59e0b !important;
             font-weight: bold;
         }
+
+        /* Chart styles */
+        .chart-bar {
+            background: linear-gradient(to right, #8B0000, #b91c1c);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
@@ -839,6 +850,7 @@
                             <p class="text-sm text-[#8B0000] font-mono mt-1">STATUS: ONLINE</p>
                         </div>
                         <nav class="space-y-1">
+                            <button onclick="switchAdminModule('dashboard')" id="admin-nav-dashboard" class="w-full text-left px-4 py-3 font-mono text-sm uppercase tracking-wide transition-all border-l-2 border-l-[#8B0000] rounded-r-md bg-[#222] text-white">DASHBOARD</button>
                             <button onclick="switchAdminModule('drivers')" id="admin-nav-drivers" class="w-full text-left px-4 py-3 font-mono text-sm uppercase tracking-wide transition-all border-l-2 rounded-r-md hover:bg-[#1a1a1a]">KIEROWCY</button>
                             <button onclick="switchAdminModule('stages')" id="admin-nav-stages" class="w-full text-left px-4 py-3 font-mono text-sm uppercase tracking-wide transition-all border-l-2 rounded-r-md hover:bg-[#1a1a1a]">ETAPY I WYNIKI</button>
                             <button onclick="switchAdminModule('scoring')" id="admin-nav-scoring" class="w-full text-left px-4 py-3 font-mono text-sm uppercase tracking-wide transition-all border-l-2 rounded-r-md hover:bg-[#1a1a1a]">PUNKTACJA</button>
@@ -851,8 +863,170 @@
                 <!-- Content Area -->
                 <div class="flex-grow">
                     
+                    <!-- MODULE: DASHBOARD -->
+                    <div id="module-dashboard" class="space-y-6">
+                        <div class="flex justify-between items-center mb-6 border-b border-[#222] pb-4">
+                            <h2 class="font-mono text-xl font-bold">DASHBOARD</h2>
+                            <div class="flex gap-2">
+                                <button onclick="refreshDashboard()" class="btn-primary text-sm">ODŚWIEŻ</button>
+                                <button onclick="generateReport()" class="btn-primary text-sm border-green-500 text-green-500 hover:bg-green-500 hover:text-black">RAPORT</button>
+                            </div>
+                        </div>
+
+                        <!-- Statystyki w czasie rzeczywistym -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="technical-border bg-[#0E0E0E] p-4 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-[#8B0000] rounded-sm"></div>
+                                    <h4 class="font-mono text-sm text-gray-400">KIEROWCY</h4>
+                                </div>
+                                <p class="text-3xl font-mono font-bold mt-2" id="stat-drivers">0</p>
+                                <p class="text-xs text-gray-500 font-mono mt-1">Zarejestrowanych</p>
+                            </div>
+                            
+                            <div class="technical-border bg-[#0E0E0E] p-4 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-blue-600 rounded-sm"></div>
+                                    <h4 class="font-mono text-sm text-gray-400">ZESPOŁY</h4>
+                                </div>
+                                <p class="text-3xl font-mono font-bold mt-2" id="stat-teams">0</p>
+                                <p class="text-xs text-gray-500 font-mono mt-1">Aktywnych</p>
+                            </div>
+                            
+                            <div class="technical-border bg-[#0E0E0E] p-4 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-green-600 rounded-sm"></div>
+                                    <h4 class="font-mono text-sm text-gray-400">OS-ÓW</h4>
+                                </div>
+                                <p class="text-3xl font-mono font-bold mt-2" id="stat-stages">0</p>
+                                <p class="text-xs text-gray-500 font-mono mt-1">Rozegranych</p>
+                            </div>
+                            
+                            <div class="technical-border bg-[#0E0E0E] p-4 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-yellow-600 rounded-sm"></div>
+                                    <h4 class="font-mono text-sm text-gray-400">WYNIKI</h4>
+                                </div>
+                                <p class="text-3xl font-mono font-bold mt-2" id="stat-results">0</p>
+                                <p class="text-xs text-gray-500 font-mono mt-1">Wprowadzonych</p>
+                            </div>
+                        </div>
+
+                        <!-- Wykresy aktywności i szybkie podsumowanie -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Wykres aktywności -->
+                            <div class="technical-border bg-[#0E0E0E] p-5 rounded-xl">
+                                <h4 class="font-mono text-base font-bold mb-4 text-gray-300 border-b border-[#222] pb-2">AKTYWNOŚĆ (OSTATNIE 7 DNI)</h4>
+                                <div class="h-48 flex items-end justify-between pt-4" id="activity-chart">
+                                    <!-- Wykres zostanie wygenerowany przez JavaScript -->
+                                </div>
+                                <p class="text-xs text-gray-500 font-mono mt-3 text-center">Dodane wyniki dziennie</p>
+                            </div>
+
+                            <!-- Szybkie podsumowanie -->
+                            <div class="technical-border bg-[#0E0E0E] p-5 rounded-xl">
+                                <h4 class="font-mono text-base font-bold mb-4 text-gray-300 border-b border-[#222] pb-2">PODSUMOWANIE TURNIEJU</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-mono text-sm text-gray-400">Status turnieju:</span>
+                                        <span class="font-mono text-sm font-bold text-green-500" id="tournament-status">AKTYWNY</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-mono text-sm text-gray-400">Progres:</span>
+                                        <span class="font-mono text-sm" id="tournament-progress">0%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-mono text-sm text-gray-400">Lider:</span>
+                                        <span class="font-mono text-sm font-bold" id="tournament-leader">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-mono text-sm text-gray-400">Ostatnia aktualizacja:</span>
+                                        <span class="font-mono text-xs" id="last-update">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ostatnie zmiany i alerty -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Ostatnie zmiany -->
+                            <div class="technical-border bg-[#0E0E0E] p-5 rounded-xl">
+                                <div class="flex justify-between items-center mb-4 border-b border-[#222] pb-2">
+                                    <h4 class="font-mono text-base font-bold text-gray-300">OSTATNIE ZMIANY</h4>
+                                    <button onclick="clearLogs()" class="text-xs text-gray-500 hover:text-white">Wyczyść</button>
+                                </div>
+                                <div class="space-y-3 max-h-60 overflow-y-auto pr-2" id="change-logs">
+                                    <!-- Logi zostaną dodane przez JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Alerty o brakujących danych -->
+                            <div class="technical-border bg-[#0E0E0E] p-5 rounded-xl">
+                                <h4 class="font-mono text-base font-bold mb-4 text-gray-300 border-b border-[#222] pb-2">ALERTY I BRAKUJĄCE DANE</h4>
+                                <div class="space-y-3 max-h-60 overflow-y-auto pr-2" id="data-alerts">
+                                    <!-- Alerty zostaną dodane przez JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Zarządzanie odcinkami i tester reguł -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Zarządzanie odcinkami -->
+                            <div class="technical-border bg-[#0E0E0E] p-5 rounded-xl">
+                                <h4 class="font-mono text-base font-bold mb-4 text-gray-300 border-b border-[#222] pb-2">ZARZĄDZANIE ODCINKAMI</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-mono text-gray-400 mb-1">Wybierz rajd:</label>
+                                        <select id="dashboard-round-select" class="input-dark text-sm" onchange="loadStagesForEdit()">
+                                            <!-- Załadowane przez JS -->
+                                        </select>
+                                    </div>
+                                    <div id="stage-edit-container" class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                                        <!-- Lista odcinków do edycji -->
+                                    </div>
+                                    <button onclick="saveStageEdits()" class="btn-primary w-full mt-2 text-sm">ZAPISZ ZMIANY</button>
+                                </div>
+                            </div>
+
+                            <!-- Tester reguł -->
+                            <div class="technical-border bg-[#0E0E0E] p-5 rounded-xl">
+                                <h4 class="font-mono text-base font-bold mb-4 text-gray-300 border-b border-[#222] pb-2">TESTER REGUŁ PUNKTACJI</h4>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs font-mono text-gray-400 mb-1">Pozycja:</label>
+                                            <input type="number" min="1" max="20" value="1" id="test-position" class="input-dark text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-mono text-gray-400 mb-1">Stan auta:</label>
+                                            <select id="test-condition" class="input-dark text-sm">
+                                                <option value="2">Czysty</option>
+                                                <option value="1">Lekkie uszk.</option>
+                                                <option value="0">Uszkodzenia</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs font-mono text-gray-400 mb-1">Wyniki 1-2 etapu:</label>
+                                            <input type="text" placeholder="np. 7,8" id="test-first-two" class="input-dark text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-mono text-gray-400 mb-1">Wynik 3 etapu:</label>
+                                            <input type="number" min="1" max="20" value="3" id="test-third" class="input-dark text-sm">
+                                        </div>
+                                    </div>
+                                    <button onclick="testScoringRules()" class="btn-primary w-full text-sm">TESTUJ REGUŁY</button>
+                                    <div id="test-result" class="hidden p-3 bg-[#111] rounded-md border-l-4 border-yellow-600">
+                                        <p class="text-xs font-mono text-gray-300" id="test-result-text"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- MODULE: DRIVERS -->
-                    <div id="module-drivers" class="space-y-6">
+                    <div id="module-drivers" class="hidden space-y-6">
                         <div class="flex justify-between items-center mb-6 border-b border-[#222] pb-4">
                             <h2 class="font-mono text-xl font-bold">BAZA KIEROWCÓW</h2>
                             <button onclick="toggleDriverForm()" class="btn-primary text-sm">+ DODAJ NOWEGO</button>
@@ -1084,7 +1258,9 @@
             leaderRotationInterval: null,
             rounds: [],
             drivers: [],
-            results: []
+            results: [],
+            changeLogs: [],
+            activityData: {}
         };
 
         // PUSTE dane początkowe
@@ -1101,7 +1277,9 @@
                 { id: 9, name: "USA (Power Stage)", stages: ["OS1: Power Stage"] }
             ],
             drivers: [],
-            results: []
+            results: [],
+            changeLogs: [],
+            activityData: {}
         };
 
         // --- LOCALSTORAGE FUNCTIONS ---
@@ -1110,7 +1288,9 @@
                 rounds: state.rounds,
                 drivers: state.drivers,
                 results: state.results,
-                version: "1.3"
+                changeLogs: state.changeLogs,
+                activityData: state.activityData,
+                version: "1.4"
             };
             localStorage.setItem('wrc_winter_cup_data', JSON.stringify(dataToSave));
         }
@@ -1123,6 +1303,8 @@
                     state.rounds = parsed.rounds || DEFAULT_DATA.rounds;
                     state.drivers = parsed.drivers || DEFAULT_DATA.drivers;
                     state.results = parsed.results || DEFAULT_DATA.results;
+                    state.changeLogs = parsed.changeLogs || [];
+                    state.activityData = parsed.activityData || {};
                     
                     // Upewnij się, że każdy kierowca ma equalizationPoints
                     state.drivers.forEach(driver => {
@@ -1130,6 +1312,11 @@
                             driver.equalizationPoints = 0;
                         }
                     });
+                    
+                    // Inicjalizuj dane aktywności jeśli nie istnieją
+                    if (!state.activityData || Object.keys(state.activityData).length === 0) {
+                        initializeActivityData();
+                    }
                     
                     return true;
                 } catch (e) {
@@ -1146,6 +1333,8 @@
             state.rounds = JSON.parse(JSON.stringify(DEFAULT_DATA.rounds));
             state.drivers = JSON.parse(JSON.stringify(DEFAULT_DATA.drivers));
             state.results = JSON.parse(JSON.stringify(DEFAULT_DATA.results));
+            state.changeLogs = [];
+            initializeActivityData();
         }
 
         function resetToDefaults() {
@@ -1154,7 +1343,572 @@
                 saveToLocalStorage();
                 refreshAllViews();
                 showAdminStatus("Dane zresetowane do pustych domyślnych");
+                addLog("Reset danych do domyślnych", "system");
             }
+        }
+
+        // --- DASHBOARD FUNCTIONS ---
+        function initializeActivityData() {
+            // Inicjalizuj dane aktywności z ostatnich 7 dni
+            const today = new Date();
+            state.activityData = {};
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(today.getDate() - i);
+                const dateKey = date.toISOString().split('T')[0];
+                state.activityData[dateKey] = 0;
+            }
+            
+            // Zlicz istniejące wyniki według daty
+            if (state.results.length > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                state.activityData[today] = state.results.length;
+            }
+        }
+
+        function updateActivityData() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Dodaj nowe wyniki z dzisiaj
+            if (!state.activityData[today]) {
+                state.activityData[today] = 0;
+            }
+            
+            // Zlicz wyniki z dzisiaj
+            const todayResults = state.results.filter(result => {
+                // W rzeczywistej implementacji powinien być timestamp
+                // Dla demo używamy prostego liczenia
+                return true; // Wszystkie wyniki liczone jako dzisiejsze dla demo
+            }).length;
+            
+            state.activityData[today] = todayResults;
+            
+            // Ogranicz do ostatnich 7 dni
+            const todayDate = new Date();
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(todayDate.getDate() - 7);
+            
+            const filteredActivityData = {};
+            for (const [date, count] of Object.entries(state.activityData)) {
+                const dateObj = new Date(date);
+                if (dateObj >= sevenDaysAgo) {
+                    filteredActivityData[date] = count;
+                }
+            }
+            
+            state.activityData = filteredActivityData;
+        }
+
+        function addLog(action, type = "user") {
+            const timestamp = new Date().toLocaleString('pl-PL');
+            const log = {
+                id: Date.now(),
+                timestamp: timestamp,
+                action: action,
+                type: type
+            };
+            
+            state.changeLogs.unshift(log);
+            
+            // Ogranicz do 50 ostatnich logów
+            if (state.changeLogs.length > 50) {
+                state.changeLogs = state.changeLogs.slice(0, 50);
+            }
+            
+            saveToLocalStorage();
+            
+            // Aktualizuj dashboard jeśli jest widoczny
+            if (state.view === 'admin' && document.getElementById('module-dashboard') && !document.getElementById('module-dashboard').classList.contains('hidden')) {
+                renderChangeLogs();
+            }
+        }
+
+        function clearLogs() {
+            if (confirm("Czy na pewno wyczyścić wszystkie logi?")) {
+                state.changeLogs = [];
+                saveToLocalStorage();
+                renderChangeLogs();
+                addLog("Wyczyszczono logi zmian", "system");
+            }
+        }
+
+        function refreshDashboard() {
+            updateStats();
+            renderActivityChart();
+            renderChangeLogs();
+            renderDataAlerts();
+            updateTournamentSummary();
+            loadRoundsForEdit();
+            addLog("Odświeżono dashboard", "system");
+            showAdminStatus("Dashboard odświeżony");
+        }
+
+        function generateReport() {
+            const reportData = {
+                generated: new Date().toLocaleString('pl-PL'),
+                drivers: state.drivers.length,
+                teams: [...new Set(state.drivers.map(d => d.team))].length,
+                rounds: state.rounds.length,
+                stages: state.rounds.reduce((sum, round) => sum + round.stages.length, 0),
+                results: state.results.length,
+                leader: calculateDriverLeader().name,
+                top5: calculateDriverStats().slice(0, 5).map((d, i) => `${i+1}. ${d.name} (${d.total} pkt)`)
+            };
+            
+            const reportText = `
+RAPORT TURNIEJU WRC WINTER RALLY CUP 2025
+=========================================
+Wygenerowano: ${reportData.generated}
+
+STATYSTYKI:
+- Kierowców: ${reportData.drivers}
+- Zespołów: ${reportData.teams}
+- Rajdów: ${reportData.rounds}
+- Odcinków: ${reportData.stages}
+- Wyników: ${reportData.results}
+
+KLASYFIKACJA TOP 5:
+${reportData.top5.join('\n')}
+
+Aktualny lider: ${reportData.leader}
+            `;
+            
+            // Pobierz raport jako plik tekstowy
+            const blob = new Blob([reportText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `raport_turnieju_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            addLog("Wygenerowano raport", "system");
+            showAdminStatus("Raport wygenerowany");
+        }
+
+        function updateStats() {
+            document.getElementById('stat-drivers').textContent = state.drivers.length;
+            
+            const uniqueTeams = [...new Set(state.drivers.map(d => d.team))].filter(team => team);
+            document.getElementById('stat-teams').textContent = uniqueTeams.length;
+            
+            const totalStages = state.rounds.reduce((sum, round) => sum + round.stages.length, 0);
+            document.getElementById('stat-stages').textContent = totalStages;
+            
+            document.getElementById('stat-results').textContent = state.results.length;
+        }
+
+        function renderActivityChart() {
+            const chartContainer = document.getElementById('activity-chart');
+            if (!chartContainer) return;
+            
+            chartContainer.innerHTML = '';
+            
+            // Pobierz ostatnie 7 dni
+            const dates = [];
+            const today = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(today.getDate() - i);
+                const dateKey = date.toISOString().split('T')[0];
+                const dayName = date.toLocaleDateString('pl-PL', { weekday: 'short' });
+                dates.push({ key: dateKey, label: dayName });
+            }
+            
+            // Znajdź maksymalną wartość dla skalowania
+            const values = dates.map(d => state.activityData[d.key] || 0);
+            const maxValue = Math.max(...values, 1);
+            
+            // Renderuj słupki
+            dates.forEach(date => {
+                const value = state.activityData[date.key] || 0;
+                const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                
+                const barContainer = document.createElement('div');
+                barContainer.className = "flex flex-col items-center mx-1 flex-1";
+                
+                const bar = document.createElement('div');
+                bar.className = "chart-bar w-full";
+                bar.style.height = `${height}%`;
+                bar.title = `${date.label}: ${value} wyników`;
+                
+                const label = document.createElement('div');
+                label.className = "text-xs text-gray-500 font-mono mt-1";
+                label.textContent = date.label;
+                
+                const valueLabel = document.createElement('div');
+                valueLabel.className = "text-xs text-gray-400 font-mono mt-1";
+                valueLabel.textContent = value;
+                
+                barContainer.appendChild(bar);
+                barContainer.appendChild(valueLabel);
+                barContainer.appendChild(label);
+                chartContainer.appendChild(barContainer);
+            });
+        }
+
+        function renderChangeLogs() {
+            const logsContainer = document.getElementById('change-logs');
+            if (!logsContainer) return;
+            
+            logsContainer.innerHTML = '';
+            
+            if (state.changeLogs.length === 0) {
+                logsContainer.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Brak logów zmian</p>';
+                return;
+            }
+            
+            state.changeLogs.slice(0, 10).forEach(log => {
+                const logElement = document.createElement('div');
+                logElement.className = "flex items-start gap-2 p-2 hover:bg-[#1a1a1a] rounded";
+                
+                const icon = document.createElement('div');
+                icon.className = `w-2 h-2 rounded-full mt-1.5 ${log.type === 'system' ? 'bg-yellow-500' : 'bg-[#8B0000]'}`;
+                
+                const content = document.createElement('div');
+                content.className = "flex-1";
+                
+                const action = document.createElement('p');
+                action.className = "text-xs text-gray-300 font-mono";
+                action.textContent = log.action;
+                
+                const timestamp = document.createElement('p');
+                timestamp.className = "text-xs text-gray-500 font-mono";
+                timestamp.textContent = log.timestamp;
+                
+                content.appendChild(action);
+                content.appendChild(timestamp);
+                logElement.appendChild(icon);
+                logElement.appendChild(content);
+                logsContainer.appendChild(logElement);
+            });
+        }
+
+        function renderDataAlerts() {
+            const alertsContainer = document.getElementById('data-alerts');
+            if (!alertsContainer) return;
+            
+            alertsContainer.innerHTML = '';
+            
+            const alerts = [];
+            
+            // Sprawdź czy są kierowcy
+            if (state.drivers.length === 0) {
+                alerts.push({
+                    type: 'error',
+                    message: 'Brak zarejestrowanych kierowców',
+                    action: 'addDriver'
+                });
+            }
+            
+            // Sprawdź czy zespoły mają po 2 kierowców
+            const teams = {};
+            state.drivers.forEach(driver => {
+                if (driver.team) {
+                    if (!teams[driver.team]) {
+                        teams[driver.team] = 0;
+                    }
+                    teams[driver.team]++;
+                }
+            });
+            
+            Object.entries(teams).forEach(([team, count]) => {
+                if (count < 2) {
+                    alerts.push({
+                        type: 'warning',
+                        message: `Zespół ${team} ma tylko ${count} kierowcę`,
+                        action: 'editTeam'
+                    });
+                }
+            });
+            
+            // Sprawdź czy są wyniki
+            if (state.results.length === 0) {
+                alerts.push({
+                    type: 'warning',
+                    message: 'Brak wprowadzonych wyników',
+                    action: 'addResults'
+                });
+            }
+            
+            // Sprawdź czy odcinki mają nazwy
+            state.rounds.forEach((round, roundIndex) => {
+                round.stages.forEach((stage, stageIndex) => {
+                    if (!stage || stage.trim() === '') {
+                        alerts.push({
+                            type: 'warning',
+                            message: `Rajd ${round.name}: OS ${stageIndex+1} nie ma nazwy`,
+                            action: 'editStages'
+                        });
+                    }
+                });
+            });
+            
+            if (alerts.length === 0) {
+                alerts.push({
+                    type: 'success',
+                    message: 'Wszystkie dane są kompletne',
+                    action: null
+                });
+            }
+            
+            alerts.forEach(alert => {
+                const alertElement = document.createElement('div');
+                alertElement.className = `flex items-start gap-2 p-2 rounded border-l-4 ${alert.type === 'error' ? 'border-red-500 bg-red-900/10' : alert.type === 'warning' ? 'border-yellow-500 bg-yellow-900/10' : 'border-green-500 bg-green-900/10'}`;
+                
+                const icon = document.createElement('div');
+                icon.className = `mt-0.5 ${alert.type === 'error' ? 'text-red-500' : alert.type === 'warning' ? 'text-yellow-500' : 'text-green-500'}`;
+                icon.innerHTML = alert.type === 'error' ? '❌' : alert.type === 'warning' ? '⚠️' : '✅';
+                
+                const message = document.createElement('p');
+                message.className = "text-xs text-gray-300 font-mono flex-1";
+                message.textContent = alert.message;
+                
+                if (alert.action) {
+                    const button = document.createElement('button');
+                    button.className = "text-xs text-[#8B0000] hover:text-white ml-2";
+                    button.textContent = "Napraw";
+                    button.onclick = () => {
+                        if (alert.action === 'addDriver') {
+                            switchAdminModule('drivers');
+                            toggleDriverForm();
+                        } else if (alert.action === 'editTeam') {
+                            switchAdminModule('drivers');
+                        } else if (alert.action === 'addResults') {
+                            switchAdminModule('stages');
+                        } else if (alert.action === 'editStages') {
+                            loadStagesForEdit();
+                        }
+                    };
+                    message.appendChild(button);
+                }
+                
+                alertElement.appendChild(icon);
+                alertElement.appendChild(message);
+                alertsContainer.appendChild(alertElement);
+            });
+        }
+
+        function updateTournamentSummary() {
+            const driverLeader = calculateDriverLeader();
+            
+            document.getElementById('tournament-leader').textContent = driverLeader.name || "-";
+            
+            // Oblicz progres
+            const totalStages = state.rounds.reduce((sum, round) => sum + round.stages.length, 0);
+            const stagesWithResults = [...new Set(state.results.map(r => `${r.r}-${r.s}`))].length;
+            const progress = totalStages > 0 ? Math.round((stagesWithResults / totalStages) * 100) : 0;
+            
+            document.getElementById('tournament-progress').textContent = `${progress}%`;
+            document.getElementById('tournament-progress').className = `font-mono text-sm ${progress === 100 ? 'text-green-500' : progress > 50 ? 'text-yellow-500' : 'text-red-500'}`;
+            
+            document.getElementById('tournament-status').textContent = progress === 100 ? 'ZAKOŃCZONY' : 'AKTYWNY';
+            document.getElementById('tournament-status').className = `font-mono text-sm font-bold ${progress === 100 ? 'text-green-500' : 'text-yellow-500'}`;
+            
+            document.getElementById('last-update').textContent = new Date().toLocaleString('pl-PL', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function loadRoundsForEdit() {
+            const select = document.getElementById('dashboard-round-select');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Wybierz rajd...</option>';
+            state.rounds.forEach((round, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${round.name} (${round.stages.length} OS)`;
+                select.appendChild(option);
+            });
+        }
+
+        function loadStagesForEdit() {
+            const container = document.getElementById('stage-edit-container');
+            const select = document.getElementById('dashboard-round-select');
+            const roundIndex = parseInt(select.value);
+            
+            if (isNaN(roundIndex) || !state.rounds[roundIndex]) {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Wybierz rajd</p>';
+                return;
+            }
+            
+            const round = state.rounds[roundIndex];
+            container.innerHTML = '';
+            
+            round.stages.forEach((stage, index) => {
+                const stageDiv = document.createElement('div');
+                stageDiv.className = "flex items-center gap-2";
+                
+                const number = document.createElement('span');
+                number.className = "text-xs text-gray-500 font-mono w-6";
+                number.textContent = `OS${index+1}:`;
+                
+                const input = document.createElement('input');
+                input.type = "text";
+                input.className = "input-dark text-sm flex-1";
+                input.value = stage;
+                input.dataset.index = index;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = "text-red-500 hover:text-red-300 text-xs px-2";
+                deleteBtn.innerHTML = "×";
+                deleteBtn.onclick = () => deleteStageFromDashboard(roundIndex, index);
+                
+                stageDiv.appendChild(number);
+                stageDiv.appendChild(input);
+                stageDiv.appendChild(deleteBtn);
+                container.appendChild(stageDiv);
+            });
+            
+            // Przycisk dodania nowego odcinka
+            const addDiv = document.createElement('div');
+            addDiv.className = "mt-3";
+            
+            const addInput = document.createElement('input');
+            addInput.type = "text";
+            addInput.className = "input-dark text-sm";
+            addInput.placeholder = "Nazwa nowego odcinka";
+            addInput.id = "new-stage-dashboard";
+            
+            const addButton = document.createElement('button');
+            addButton.className = "btn-primary text-sm w-full mt-2";
+            addButton.textContent = "+ DODAJ NOWY OS";
+            addButton.onclick = () => addStageFromDashboard(roundIndex);
+            
+            addDiv.appendChild(addInput);
+            addDiv.appendChild(addButton);
+            container.appendChild(addDiv);
+        }
+
+        function addStageFromDashboard(roundIndex) {
+            const input = document.getElementById('new-stage-dashboard');
+            const name = input.value.trim();
+            
+            if (name) {
+                state.rounds[roundIndex].stages.push(name);
+                input.value = '';
+                loadStagesForEdit();
+                saveToLocalStorage();
+                refreshAllViews();
+                addLog(`Dodano odcinek: ${name} do ${state.rounds[roundIndex].name}`, "system");
+                showAdminStatus("Odcinek dodany");
+            }
+        }
+
+        function deleteStageFromDashboard(roundIndex, stageIndex) {
+            if (confirm("Czy na pewno usunąć ten odcinek? Wszystkie wyniki z tego odcinka również zostaną usunięte.")) {
+                const stageName = state.rounds[roundIndex].stages[stageIndex];
+                
+                // Usuń odcinek
+                state.rounds[roundIndex].stages.splice(stageIndex, 1);
+                
+                // Usuń wyniki z tego odcinka
+                state.results = state.results.filter(result => !(result.r === roundIndex && result.s === stageIndex));
+                
+                // Aktualizuj indeksy wyników dla kolejnych odcinków
+                state.results.forEach(result => {
+                    if (result.r === roundIndex && result.s > stageIndex) {
+                        result.s--;
+                    }
+                });
+                
+                loadStagesForEdit();
+                saveToLocalStorage();
+                refreshAllViews();
+                addLog(`Usunięto odcinek: ${stageName} z ${state.rounds[roundIndex].name}`, "system");
+                showAdminStatus("Odcinek usunięty");
+            }
+        }
+
+        function saveStageEdits() {
+            const select = document.getElementById('dashboard-round-select');
+            const roundIndex = parseInt(select.value);
+            
+            if (isNaN(roundIndex) || !state.rounds[roundIndex]) {
+                showAdminStatus("Wybierz rajd", true);
+                return;
+            }
+            
+            const inputs = document.querySelectorAll('#stage-edit-container input[type="text"]:not(#new-stage-dashboard)');
+            let hasChanges = false;
+            
+            inputs.forEach(input => {
+                const stageIndex = parseInt(input.dataset.index);
+                const newName = input.value.trim();
+                
+                if (state.rounds[roundIndex].stages[stageIndex] !== newName) {
+                    const oldName = state.rounds[roundIndex].stages[stageIndex];
+                    state.rounds[roundIndex].stages[stageIndex] = newName;
+                    hasChanges = true;
+                    addLog(`Zmieniono nazwę odcinka: ${oldName} → ${newName}`, "system");
+                }
+            });
+            
+            if (hasChanges) {
+                saveToLocalStorage();
+                refreshAllViews();
+                showAdminStatus("Zmiany zapisane");
+            } else {
+                showAdminStatus("Brak zmian do zapisania");
+            }
+        }
+
+        function testScoringRules() {
+            const position = parseInt(document.getElementById('test-position').value);
+            const condition = parseInt(document.getElementById('test-condition').value);
+            const firstTwoInput = document.getElementById('test-first-two').value;
+            const thirdPosition = parseInt(document.getElementById('test-third').value);
+            
+            // Punkty za miejsce
+            const pointsSystem = [15, 12, 10, 8, 6, 4, 2, 1];
+            const positionPoints = position <= pointsSystem.length ? pointsSystem[position - 1] : 0;
+            
+            // Punkty za stan auta
+            const conditionPoints = condition;
+            
+            // Punkty wyrównawcze
+            let equalizationPoints = 0;
+            let equalizationLogic = '';
+            
+            if (firstTwoInput && firstTwoInput.trim() !== '') {
+                const positions = firstTwoInput.split(',').map(p => parseInt(p.trim()));
+                if (positions.length === 2) {
+                    const [pos1, pos2] = positions;
+                    const avgPosition = (pos1 + pos2) / 2;
+                    
+                    // Symulacja dla 6 i 8 graczy
+                    if (avgPosition > 5 && thirdPosition <= 3) {
+                        equalizationPoints = 4;
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>5) i 3. etap: ${thirdPosition} (≤3) = +4 PKT`;
+                    } else if (avgPosition > 6 && thirdPosition <= 4) {
+                        equalizationPoints = 4;
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>6) i 3. etap: ${thirdPosition} (≤4) = +4 PKT`;
+                    } else {
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)}, 3. etap: ${thirdPosition} = 0 PKT wyrównawczych`;
+                    }
+                }
+            }
+            
+            const totalPoints = positionPoints + conditionPoints + equalizationPoints;
+            
+            const resultText = `
+            WYNIK SYMULACJI:
+            • Miejsce: ${position}. = ${positionPoints} PKT
+            • Stan auta: ${condition === 2 ? 'Czysty' : condition === 1 ? 'Lekkie uszk.' : 'Uszkodzenia'} = +${conditionPoints} PKT
+            • ${equalizationLogic}
+            • SUMA: ${totalPoints} PKT
+            `;
+            
+            document.getElementById('test-result-text').textContent = resultText;
+            document.getElementById('test-result').classList.remove('hidden');
+            
+            addLog("Przeprowadzono test reguł punktacji", "system");
         }
 
         // --- HELPER FUNCTIONS ---
@@ -1462,6 +2216,7 @@
             calculateAllRoundPoints();
             refreshAllViews();
             showAdminStatus("Punkty przeliczone pomyślnie");
+            addLog("Przeliczono wszystkie punkty", "system");
         }
 
         // --- DYNAMIC LEADERS ON HOME PAGE ---
@@ -1587,21 +2342,29 @@
         }
 
         function switchAdminModule(moduleName) {
+            document.getElementById('module-dashboard').classList.add('hidden');
             document.getElementById('module-drivers').classList.add('hidden');
             document.getElementById('module-stages').classList.add('hidden');
             document.getElementById('module-scoring').classList.add('hidden');
             
-            ['drivers', 'stages', 'scoring'].forEach(m => {
+            ['dashboard', 'drivers', 'stages', 'scoring'].forEach(m => {
                 const nav = document.getElementById(`admin-nav-${m}`);
-                nav.classList.remove('bg-[#222]', 'text-white', 'border-l-[#8B0000]');
-                nav.classList.add('text-gray-400', 'border-l-transparent', 'hover:bg-[#1a1a1a]');
+                if (nav) {
+                    nav.classList.remove('bg-[#222]', 'text-white', 'border-l-[#8B0000]');
+                    nav.classList.add('text-gray-400', 'border-l-transparent', 'hover:bg-[#1a1a1a]');
+                }
             });
 
             document.getElementById(`module-${moduleName}`).classList.remove('hidden');
             const activeNav = document.getElementById(`admin-nav-${moduleName}`);
-            activeNav.classList.remove('text-gray-400', 'border-l-transparent', 'hover:bg-[#1a1a1a]');
-            activeNav.classList.add('bg-[#222]', 'text-white', 'border-l-[#8B0000]');
+            if (activeNav) {
+                activeNav.classList.remove('text-gray-400', 'border-l-transparent', 'hover:bg-[#1a1a1a]');
+                activeNav.classList.add('bg-[#222]', 'text-white', 'border-l-[#8B0000]');
+            }
             
+            if(moduleName === 'dashboard') {
+                refreshDashboard();
+            }
             if(moduleName === 'stages') initAdminStages();
             if(moduleName === 'scoring') renderScoringPreview();
             if(moduleName === 'drivers') renderAdminDrivers();
@@ -2177,6 +2940,9 @@
             const carSelect = document.getElementById('modal-driver-car');
             
             if (teamSelect && carSelect) {
+                const oldTeam = driver.team;
+                const oldCar = driver.car;
+                
                 driver.team = teamSelect.value;
                 driver.car = carSelect.value;
                 
@@ -2186,6 +2952,8 @@
                 updateTeamAssignments();
                 saveToLocalStorage();
                 closeEditModal();
+                
+                addLog(`Zmieniono zespół/samochód kierowcy ${driver.name}: ${oldTeam} (${oldCar}) → ${driver.team} (${driver.car})`, "system");
             }
         }
 
@@ -2416,6 +3184,12 @@
             showAdminStatus("Zapisano poprawnie");
             refreshAllViews();
             saveToLocalStorage();
+            updateActivityData();
+            
+            const driver = state.drivers.find(d => d.id === dId);
+            const roundName = state.rounds[rIdx]?.name || `Rajd ${rIdx+1}`;
+            const stageName = state.rounds[rIdx]?.stages[sIdx] || `OS ${sIdx+1}`;
+            addLog(`Dodano wynik: ${driver?.name || 'Nieznany'} - ${roundName} - ${stageName}: ${timeStr}`, "system");
         }
         
         function deleteResult(r, s, d) {
@@ -2425,6 +3199,11 @@
                 refreshAllViews();
                 saveToLocalStorage();
                 showAdminStatus("Wynik usunięty");
+                
+                const driver = state.drivers.find(drv => drv.id === d);
+                const roundName = state.rounds[r]?.name || `Rajd ${r+1}`;
+                const stageName = state.rounds[r]?.stages[s] || `OS ${s+1}`;
+                addLog(`Usunięto wynik: ${driver?.name || 'Nieznany'} - ${roundName} - ${stageName}`, "system");
             }
         }
 
@@ -2445,6 +3224,7 @@
                 showAdminStatus("Rajd dodany");
                 refreshAllViews();
                 saveToLocalStorage();
+                addLog(`Dodano rajd: ${name}`, "system");
             } else {
                 showAdminStatus("Wprowadź nazwę rajdu", true);
             }
@@ -2467,6 +3247,7 @@
                 showAdminStatus("Odcinek dodany");
                 refreshAllViews();
                 saveToLocalStorage();
+                addLog(`Dodano odcinek: ${name} do ${state.rounds[rIdx].name}`, "system");
             } else {
                 showAdminStatus("Wybierz rajd i wprowadź nazwę odcinka", true);
             }
@@ -2503,6 +3284,8 @@
                 rounds: state.rounds,
                 drivers: state.drivers,
                 results: state.results,
+                changeLogs: state.changeLogs,
+                activityData: state.activityData,
                 exportDate: new Date().toISOString()
             };
             
@@ -2517,6 +3300,7 @@
             linkElement.click();
             
             showAdminStatus("Dane wyeksportowane");
+            addLog("Wyeksportowano wszystkie dane", "system");
         }
 
         function importData() {
@@ -2541,6 +3325,8 @@
                             state.rounds = importedData.rounds;
                             state.drivers = importedData.drivers;
                             state.results = importedData.results;
+                            state.changeLogs = importedData.changeLogs || [];
+                            state.activityData = importedData.activityData || {};
                             
                             // Upewnij się, że każdy kierowca ma equalizationPoints
                             state.drivers.forEach(driver => {
@@ -2552,6 +3338,7 @@
                             saveToLocalStorage();
                             refreshAllViews();
                             showAdminStatus("Dane zaimportowane pomyślnie");
+                            addLog("Zaimportowano dane z pliku", "system");
                         }
                     } catch (error) {
                         showAdminStatus("Błąd podczas importu danych: " + error.message, true);
@@ -2581,6 +3368,7 @@
                     showAdminStatus("Punkty zaktualizowane");
                     refreshAllViews();
                     saveToLocalStorage();
+                    addLog(`Edytowano punkty kierowcy: ${driver.name}`, "system");
                 } catch(e) {
                     showAdminStatus(e.message, true);
                 }
@@ -2600,6 +3388,8 @@
                 renderAdminDrivers();
                 initAdminStages();
                 renderScoringPreview();
+                refreshDashboard();
+                addLog("Zalogowano do panelu admina", "system");
             } else {
                 errorEl.textContent = "Nieprawidłowy login lub hasło.";
                 errorEl.classList.remove('hidden');
@@ -2613,6 +3403,7 @@
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
             document.getElementById('login-error').classList.add('hidden');
+            addLog("Wylogowano z panelu admina", "system");
         }
 
         function toggleDriverForm() {
@@ -2646,13 +3437,17 @@
                 updateTeamAssignments();
                 saveToLocalStorage();
                 showAdminStatus("Kierowca dodany");
+                addLog(`Dodano kierowcę: ${name} (${team})`, "system");
             } else {
                 showAdminStatus("Wypełnij wszystkie pola", true);
             }
         }
 
         function deleteDriver(id) {
-            if(confirm('Czy na pewno usunąć kierowcę? Wszystkie jego wyniki również zostaną usunięte.')) {
+            const driver = state.drivers.find(d => d.id === id);
+            if (!driver) return;
+            
+            if(confirm(`Czy na pewno usunąć kierowcę ${driver.name}? Wszystkie jego wyniki również zostaną usunięte.`)) {
                 state.drivers = state.drivers.filter(d => d.id !== id);
                 state.results = state.results.filter(r => r.d !== id);
                 
@@ -2661,6 +3456,7 @@
                 updateTeamAssignments();
                 saveToLocalStorage();
                 showAdminStatus("Kierowca usunięty");
+                addLog(`Usunięto kierowcę: ${driver.name}`, "system");
             }
         }
 
@@ -2681,21 +3477,11 @@
             
             // Uruchom rotację liderów
             startLeaderRotation();
+            
+            // Inicjalizuj dane aktywności
+            updateActivityData();
         });
 
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
