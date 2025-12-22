@@ -273,62 +273,58 @@
             font-size: 0.75rem;
             padding: 2px 4px;
         }
-
-        /* Loader styles */
-        .loader {
-            border: 3px solid #333;
-            border-top: 3px solid #8B0000;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            text-align: center;
-            color: #888;
+        
+        /* Cloud status indicator */
+        .cloud-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-family: 'Source Code Pro', monospace;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
-
-        .no-data-message {
-            text-align: center;
-            padding: 40px;
-            color: #888;
-            font-family: 'Source Code Pro', monospace;
-            font-size: 1rem;
-            border: 1px dashed #333;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .no-data-message a {
-            color: #8B0000;
-            text-decoration: underline;
-            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(10px);
         }
         
-        /* Error message */
-        .error-message {
-            background-color: rgba(220, 38, 38, 0.1);
-            border: 1px solid #dc2626;
-            color: #ef4444;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 10px 0;
-            font-family: 'Source Code Pro', monospace;
-            font-size: 0.9rem;
+        .cloud-online {
+            background-color: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #4ade80;
+        }
+        
+        .cloud-offline {
+            background-color: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #f87171;
+        }
+        
+        .cloud-syncing {
+            background-color: rgba(234, 179, 8, 0.2);
+            border: 1px solid rgba(234, 179, 8, 0.5);
+            color: #facc15;
+        }
+        
+        .sync-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
+
+    <!-- Cloud Status Indicator -->
+    <div id="cloud-status" class="cloud-indicator cloud-online hidden">
+        <span id="cloud-status-text">SYNC ONLINE</span>
+        <div id="cloud-spinner" class="sync-spinner hidden">⟳</div>
+    </div>
 
     <!-- Header / Navigation -->
     <header class="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#222]">
@@ -339,7 +335,7 @@
                     <div class="flex items-center gap-2">
                         <!-- WRC Logo -->
                         <div>
-                            <img src="wrc.png" width="80px" alt="WRC Logo">
+                            <img src="wrc.png" width="80px">
                         </div>
                     </div>
                 </div>
@@ -365,7 +361,7 @@
                 <div class="technical-border rounded-xl bg-[#0E0E0E] relative overflow-hidden h-[280px] w-full flex flex-col items-center justify-center group mb-6">
                     <!-- Background Image -->
                     <div class="absolute inset-0 z-0">
-                        <img src="zdj.jpg" class="w-full h-full object-cover grayscale brightness-[0.4] group-hover:scale-105 transition-transform duration-700" alt="Rally Background">
+                        <img src="zdj.jpg" class="w-full h-full object-cover grayscale brightness-[0.4] group-hover:scale-105 transition-transform duration-700">
                         <div class="absolute inset-0 scanline opacity-30"></div>
                         <div class="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/60 via-transparent to-[#0A0A0A]/60"></div>
                     </div>
@@ -392,17 +388,11 @@
                         <div class="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/80 via-transparent to-[#0A0A0A]/80"></div>
                     </div>
                     
-                    <!-- Loading State -->
-                    <div id="loading-state" class="absolute inset-0 flex flex-col items-center justify-center p-6">
-                        <div class="loader"></div>
-                        <p class="loading-text">Ładowanie danych...</p>
-                    </div>
-                    
                     <!-- Driver Leader -->
-                    <div id="leader-driver" class="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 opacity-0">
+                    <div id="leader-driver" class="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 opacity-100">
                         <div class="text-center">
                             <p class="text-xs font-mono text-gray-400 mb-2 uppercase tracking-widest">Aktualny Lider</p>
-                            <h3 class="text-2xl font-mono font-bold text-white tracking-widest mb-1" id="driver-leader-name">Brak danych</h3>
+                            <h3 class="text-2xl font-mono font-bold text-white tracking-widest mb-1" id="driver-leader-name">Ładowanie...</h3>
                             <p class="text-sm text-gray-300 font-mono tracking-wide">KIEROWCÓW</p>
                             <div class="mt-3 flex items-center justify-center">
                                 <span class="text-3xl font-mono font-bold text-[#8B0000] mr-2" id="driver-leader-points">0</span>
@@ -415,7 +405,7 @@
                     <div id="leader-constructor" class="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 opacity-0">
                         <div class="text-center">
                             <p class="text-xs font-mono text-gray-400 mb-2 uppercase tracking-widest">Aktualny Lider</p>
-                            <h3 class="text-2xl font-mono font-bold text-white tracking-widest mb-1" id="constructor-leader-name">Brak danych</h3>
+                            <h3 class="text-2xl font-mono font-bold text-white tracking-widest mb-1" id="constructor-leader-name">Ładowanie...</h3>
                             <p class="text-sm text-gray-300 font-mono tracking-wide">KONSTRUKTORÓW</p>
                             <div class="mt-3 flex items-center justify-center">
                                 <span class="text-3xl font-mono font-bold text-[#8B0000] mr-2" id="constructor-leader-points">0</span>
@@ -488,7 +478,7 @@
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-8 gap-6 border-b border-[#222] pb-6">
                 <div>
                     <h2 class="text-3xl font-mono font-bold">WYNIKI SZCZEGÓŁOWE</h2>
-                    <p class="text-sm text-gray-400 font-mono mt-1">ANALIZA CZASÓW ODCINKÓW SPECJALNYCH</p>
+                    <p class="text-sm text-gray-400 font-mono mt-1">ANALIZA CZASÓW ODCINKÓW SPECJALNYOS</p>
                 </div>
                 
                 <!-- Controls -->
@@ -944,7 +934,7 @@
                     <div class="technical-border bg-[#0E0E0E] p-4 sticky top-24 rounded-xl">
                         <div class="mb-8 pb-4 border-b border-[#222]">
                             <h3 class="font-mono font-bold text-lg">PANEL STEROWANIA</h3>
-                            <p class="text-sm text-[#8B0000] font-mono mt-1">STATUS: ONLINE</p>
+                            <p class="text-sm text-[#8B0000] font-mono mt-1">STATUS: <span id="cloud-status-admin">ONLINE</span></p>
                         </div>
                         <nav class="space-y-1">
                             <button onclick="switchAdminModule('dashboard')" id="admin-nav-dashboard" class="w-full text-left px-4 py-3 font-mono text-sm uppercase tracking-wide transition-all border-l-2 border-l-[#8B0000] rounded-r-md bg-[#222] text-white">DASHBOARD</button>
@@ -968,6 +958,7 @@
                             <div class="flex gap-2">
                                 <button onclick="refreshDashboard()" class="btn-primary text-sm">ODŚWIEŻ</button>
                                 <button onclick="generateReport()" class="btn-primary text-sm border-green-500 text-green-500 hover:bg-green-500 hover:text-black">RAPORT</button>
+                                <button onclick="manualSync()" class="btn-primary text-sm border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-black">SYNCHRONIZUJ</button>
                             </div>
                         </div>
 
@@ -1031,6 +1022,10 @@
                                     <div class="flex justify-between items-center">
                                         <span class="font-mono text-sm text-gray-400">Ostatnia aktualizacja:</span>
                                         <span class="font-mono text-xs" id="last-update">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-mono text-sm text-gray-400">Cloud Sync:</span>
+                                        <span class="font-mono text-xs" id="last-cloud-sync">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -1443,12 +1438,30 @@
 
     <footer class="mt-12 border-t border-[#222] py-8 bg-[#050505] relative z-10">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">WRC WINTER RALLY CUP 2025 // OFFICIAL TOURNAMENT SYSTEM</p>
+            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">WRC WINTER RALLY CUP 2025 // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
         </div>
     </footer>
 
     <!-- JavaScript Logic -->
     <script>
+        // --- CLOUD CONFIGURATION ---
+        // Użyj JSONBin.io jako darmowej bazy danych w chmurze
+        // Musisz stworzyć własny bin na https://jsonbin.io/ i wstawić poniższe dane
+        
+        const CLOUD_CONFIG = {
+            // Twój bin ID z JSONBin.io
+            BIN_ID: '67e34e8dacd3cb34a8917b5b', // Przykładowy ID - ZASTĄP SWOIM!
+            
+            // Twój X-Master-Key z JSONBin.io
+            API_KEY: '$2a$10$5p6vQqMZrBqxuNt.7f7J6eF6K8V9L2X1Y3Z4A5B6C7D8E9F0G1H2I3J4K5L6M', // Przykładowy klucz - ZASTĄP SWOIM!
+            
+            // URL endpointów
+            BASE_URL: 'https://api.jsonbin.io/v3/b',
+            
+            // Wersja danych
+            DATA_VERSION: '2.0'
+        };
+
         // --- DATA STORE ---
         const state = {
             view: 'home',
@@ -1459,8 +1472,9 @@
             drivers: [],
             results: [],
             changeLogs: [],
-            lastSaveTime: 0,
-            saveDebounceTimer: null
+            cloudStatus: 'offline',
+            lastSync: null,
+            pendingChanges: false
         };
 
         // PUSTE dane początkowe
@@ -1478,140 +1492,241 @@
             ],
             drivers: [],
             results: [],
-            changeLogs: []
+            changeLogs: [],
+            version: CLOUD_CONFIG.DATA_VERSION
         };
 
-        // --- GITHUB PAGES STORAGE FUNCTIONS ---
-        // Na GitHub Pages używamy LocalStorage + opcjonalnie GitHub Gist/API
-        // Ale głównie LocalStorage
+        // --- CLOUD SYNC FUNCTIONS ---
+        function updateCloudStatus(status, message = '') {
+            state.cloudStatus = status;
+            const statusEl = document.getElementById('cloud-status');
+            const statusText = document.getElementById('cloud-status-text');
+            const adminStatus = document.getElementById('cloud-status-admin');
+            
+            if (statusEl && statusText) {
+                statusEl.className = `cloud-indicator cloud-${status}`;
+                statusText.textContent = message || status.toUpperCase();
+                statusEl.classList.remove('hidden');
+            }
+            
+            if (adminStatus) {
+                adminStatus.textContent = status.toUpperCase();
+                adminStatus.className = `font-mono text-sm ${status === 'online' ? 'text-green-500' : status === 'syncing' ? 'text-yellow-500' : 'text-red-500'}`;
+            }
+        }
 
-        async function saveToStorage() {
+        function showCloudSpinner(show) {
+            const spinner = document.getElementById('cloud-spinner');
+            if (spinner) {
+                spinner.classList.toggle('hidden', !show);
+            }
+        }
+
+        async function saveToCloud() {
+            if (state.cloudStatus === 'offline') {
+                console.log('Cloud offline, skipping save');
+                return false;
+            }
+            
+            showCloudSpinner(true);
+            updateCloudStatus('syncing', 'SYNCING...');
+            
             const dataToSave = {
                 rounds: state.rounds,
                 drivers: state.drivers,
                 results: state.results,
                 changeLogs: state.changeLogs,
-                version: "1.5",
-                lastSaved: new Date().toISOString()
+                version: CLOUD_CONFIG.DATA_VERSION,
+                lastUpdated: new Date().toISOString()
             };
             
             try {
-                // Zapis do LocalStorage (działa wszędzie)
-                localStorage.setItem('wrc_winter_cup_data', JSON.stringify(dataToSave));
+                const response = await fetch(`${CLOUD_CONFIG.BASE_URL}/${CLOUD_CONFIG.BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': CLOUD_CONFIG.API_KEY,
+                        'X-Bin-Name': 'WRC Winter Rally Cup 2025 Data'
+                    },
+                    body: JSON.stringify(dataToSave)
+                });
                 
-                // Opcjonalnie: zapis do pliku JSON przez GitHub API
-                // (wymaga tokena i autoryzacji)
-                await trySaveToGitHub(dataToSave);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                state.lastSync = new Date();
+                state.pendingChanges = false;
+                
+                // Zapisz również w localStorage jako backup
+                localStorage.setItem('wrc_winter_cup_data', JSON.stringify(dataToSave));
+                localStorage.setItem('wrc_last_sync', state.lastSync.toISOString());
+                
+                updateCloudStatus('online', `SYNCED ${new Date().toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'})}`);
+                showCloudSpinner(false);
+                
+                // Aktualizuj timestamp na dashboardzie
+                if (state.view === 'admin') {
+                    document.getElementById('last-cloud-sync').textContent = state.lastSync.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'});
+                }
                 
                 return true;
             } catch (error) {
-                console.error("Błąd zapisu:", error);
-                // Fallback tylko do LocalStorage
+                console.error('Błąd synchronizacji z chmurą:', error);
+                updateCloudStatus('offline', 'SYNC FAILED');
+                showCloudSpinner(false);
+                
+                // Spróbuj zapisać lokalnie
                 localStorage.setItem('wrc_winter_cup_data', JSON.stringify(dataToSave));
+                localStorage.setItem('wrc_pending_changes', 'true');
+                
                 return false;
             }
         }
 
-        async function trySaveToGitHub(data) {
-            // Ta funkcja wymaga skonfigurowania GitHub API
-            // Można ją włączyć później
-            return false;
-        }
-
-        function loadFromStorage() {
+        async function loadFromCloud() {
+            showCloudSpinner(true);
+            updateCloudStatus('syncing', 'LOADING...');
+            
             try {
-                console.log("Ładowanie danych z LocalStorage...");
+                // Spróbuj pobrać z chmury
+                const response = await fetch(`${CLOUD_CONFIG.BASE_URL}/${CLOUD_CONFIG.BIN_ID}/latest`, {
+                    headers: {
+                        'X-Master-Key': CLOUD_CONFIG.API_KEY
+                    }
+                });
                 
-                const savedData = localStorage.getItem('wrc_winter_cup_data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
-                if (savedData) {
-                    const parsed = JSON.parse(savedData);
+                const result = await response.json();
+                const cloudData = result.record;
+                
+                if (cloudData && cloudData.version) {
+                    // Dane z chmury są nowsze lub tej samej wersji
+                    state.rounds = cloudData.rounds || DEFAULT_DATA.rounds;
+                    state.drivers = cloudData.drivers || DEFAULT_DATA.drivers;
+                    state.results = cloudData.results || DEFAULT_DATA.results;
+                    state.changeLogs = cloudData.changeLogs || [];
                     
-                    // Walidacja danych
-                    state.rounds = Array.isArray(parsed.rounds) ? parsed.rounds : DEFAULT_DATA.rounds;
-                    state.drivers = Array.isArray(parsed.drivers) ? parsed.drivers : DEFAULT_DATA.drivers;
-                    state.results = Array.isArray(parsed.results) ? parsed.results : DEFAULT_DATA.results;
-                    state.changeLogs = Array.isArray(parsed.changeLogs) ? parsed.changeLogs : [];
-                    
-                    // Upewnij się, że każdy kierowca ma wymagane pola
+                    // Upewnij się, że każdy kierowca ma equalizationPoints
                     state.drivers.forEach(driver => {
                         if (driver.equalizationPoints === undefined) {
                             driver.equalizationPoints = 0;
                         }
-                        if (!driver.points || !Array.isArray(driver.points)) {
-                            driver.points = new Array(state.rounds.length).fill(0);
-                        }
                     });
                     
-                    console.log(`Załadowano: ${state.drivers.length} kierowców, ${state.rounds.length} rund, ${state.results.length} wyników`);
+                    // Zapisz lokalnie
+                    localStorage.setItem('wrc_winter_cup_data', JSON.stringify(cloudData));
+                    state.lastSync = new Date();
+                    localStorage.setItem('wrc_last_sync', state.lastSync.toISOString());
+                    
+                    updateCloudStatus('online', 'SYNC ONLINE');
+                    showCloudSpinner(false);
+                    
+                    console.log('Dane załadowane z chmury');
                     return true;
                 } else {
-                    console.log("Brak zapisanych danych, używam domyślnych");
-                    loadDefaultData();
-                    return false;
+                    throw new Error('Nieprawidłowy format danych z chmury');
                 }
             } catch (error) {
-                console.error("Błąd podczas wczytywania danych:", error);
+                console.error('Błąd ładowania z chmury:', error);
+                
+                // Spróbuj załadować z localStorage
+                const localData = localStorage.getItem('wrc_winter_cup_data');
+                if (localData) {
+                    try {
+                        const parsed = JSON.parse(localData);
+                        state.rounds = parsed.rounds || DEFAULT_DATA.rounds;
+                        state.drivers = parsed.drivers || DEFAULT_DATA.drivers;
+                        state.results = parsed.results || DEFAULT_DATA.results;
+                        state.changeLogs = parsed.changeLogs || [];
+                        
+                        state.drivers.forEach(driver => {
+                            if (driver.equalizationPoints === undefined) {
+                                driver.equalizationPoints = 0;
+                            }
+                        });
+                        
+                        updateCloudStatus('offline', 'USING LOCAL DATA');
+                        showCloudSpinner(false);
+                        
+                        // Sprawdź czy są pending changes
+                        state.pendingChanges = localStorage.getItem('wrc_pending_changes') === 'true';
+                        if (state.pendingChanges) {
+                            updateCloudStatus('offline', 'PENDING CHANGES');
+                        }
+                        
+                        console.log('Dane załadowane z localStorage');
+                        return true;
+                    } catch (e) {
+                        console.error("Błąd podczas wczytywania danych z localStorage:", e);
+                    }
+                }
+                
+                // Wczytaj domyślne dane
                 loadDefaultData();
+                updateCloudStatus('offline', 'NO CLOUD DATA');
+                showCloudSpinner(false);
+                
+                console.log('Załadowano domyślne dane');
                 return false;
             }
         }
 
-        function loadDefaultData() {
-            // Domyślne dane z przykładowymi kierowcami
-            state.rounds = JSON.parse(JSON.stringify(DEFAULT_DATA.rounds));
-            state.drivers = [
-                {
-                    id: 1,
-                    name: "Jan Kowalski",
-                    team: "Ford",
-                    car: "Ford Fiesta R5",
-                    points: new Array(DEFAULT_DATA.rounds.length).fill(0),
-                    equalizationPoints: 0
-                },
-                {
-                    id: 2,
-                    name: "Piotr Nowak",
-                    team: "Ford",
-                    car: "Ford Fiesta R5",
-                    points: new Array(DEFAULT_DATA.rounds.length).fill(0),
-                    equalizationPoints: 0
-                },
-                {
-                    id: 3,
-                    name: "Anna Wiśniewska",
-                    team: "Volkswagen",
-                    car: "Volkswagen Polo GTI R5",
-                    points: new Array(DEFAULT_DATA.rounds.length).fill(0),
-                    equalizationPoints: 0
-                },
-                {
-                    id: 4,
-                    name: "Michał Lewandowski",
-                    team: "Škoda",
-                    car: "Škoda Fabia R5",
-                    points: new Array(DEFAULT_DATA.rounds.length).fill(0),
-                    equalizationPoints: 0
-                }
-            ];
-            state.results = [];
-            state.changeLogs = [];
-            
-            console.log("Wczytano domyślne dane z przykładowymi kierowcami");
+        async function manualSync() {
+            const success = await saveToCloud();
+            if (success) {
+                showAdminStatus("Synchronizacja zakończona sukcesem");
+                addLog("Ręczna synchronizacja z chmurą", "system");
+            } else {
+                showAdminStatus("Błąd synchronizacji", true);
+            }
         }
 
-        async function resetToDefaults() {
+        function loadDefaultData() {
+            state.rounds = JSON.parse(JSON.stringify(DEFAULT_DATA.rounds));
+            state.drivers = JSON.parse(JSON.stringify(DEFAULT_DATA.drivers));
+            state.results = JSON.parse(JSON.stringify(DEFAULT_DATA.results));
+            state.changeLogs = [];
+            state.pendingChanges = false;
+        }
+
+        function resetToDefaults() {
             if (confirm("Czy na pewno chcesz zresetować wszystkie dane do ustawień domyślnych? Ta operacja jest nieodwracalna i usunie wszystkich kierowców i wyniki.")) {
                 loadDefaultData();
-                await saveToStorage();
+                saveToCloud();
                 refreshAllViews();
-                showAdminStatus("Dane zresetowane do domyślnych");
+                showAdminStatus("Dane zresetowane do pustych domyślnych");
                 addLog("Reset danych do domyślnych", "system");
             }
         }
 
+        // --- ZMIENIONA FUNKCJA saveToLocalStorage ---
+        // Teraz zapisuje do chmury zamiast localStorage
+        async function saveToLocalStorage() {
+            state.pendingChanges = true;
+            
+            // Zapisz lokalnie jako backup
+            const dataToSave = {
+                rounds: state.rounds,
+                drivers: state.drivers,
+                results: state.results,
+                changeLogs: state.changeLogs,
+                version: CLOUD_CONFIG.DATA_VERSION
+            };
+            
+            localStorage.setItem('wrc_winter_cup_data', JSON.stringify(dataToSave));
+            localStorage.setItem('wrc_pending_changes', 'true');
+            
+            // Spróbuj zsynchronizować z chmurą
+            await saveToCloud();
+        }
+
         // --- DASHBOARD FUNCTIONS ---
-        async function addLog(action, type = "user") {
+        function addLog(action, type = "user") {
             const timestamp = new Date().toLocaleString('pl-PL');
             const log = {
                 id: Date.now(),
@@ -1627,7 +1742,7 @@
                 state.changeLogs = state.changeLogs.slice(0, 50);
             }
             
-            await saveToStorage();
+            saveToLocalStorage();
             
             // Aktualizuj dashboard jeśli jest widoczny
             if (state.view === 'admin' && document.getElementById('module-dashboard') && !document.getElementById('module-dashboard').classList.contains('hidden')) {
@@ -1635,16 +1750,16 @@
             }
         }
 
-        async function clearLogs() {
+        function clearLogs() {
             if (confirm("Czy na pewno wyczyścić wszystkie logi?")) {
                 state.changeLogs = [];
-                await saveToStorage();
+                saveToLocalStorage();
                 renderChangeLogs();
                 addLog("Wyczyszczono logi zmian", "system");
             }
         }
 
-        async function refreshDashboard() {
+        function refreshDashboard() {
             updateStats();
             renderChangeLogs();
             renderDataAlerts();
@@ -1663,10 +1778,13 @@
                 stages: state.rounds.reduce((sum, round) => sum + round.stages.length, 0),
                 results: state.results.length,
                 leader: calculateDriverLeader().name,
-                top5: calculateDriverStats().slice(0, 5).map((d, i) => `${i+1}. ${d.name} (${d.total} pkt)`)
+                top5: calculateDriverStats().slice(0, 5).map((d, i) => `${i+1}. ${d.name} (${d.total} pkt)`),
+                cloudStatus: state.cloudStatus,
+                lastSync: state.lastSync ? state.lastSync.toLocaleString('pl-PL') : 'Nigdy'
             };
             
-            const reportText = `RAPORT TURNIEJU WRC WINTER RALLY CUP 2025
+            const reportText = `
+RAPORT TURNIEJU WRC WINTER RALLY CUP 2025
 =========================================
 Wygenerowano: ${reportData.generated}
 
@@ -1676,11 +1794,14 @@ STATYSTYKI:
 - Rajdów: ${reportData.rounds}
 - Odcinków: ${reportData.stages}
 - Wyników: ${reportData.results}
+- Status chmury: ${reportData.cloudStatus}
+- Ostatnia synchronizacja: ${reportData.lastSync}
 
 KLASYFIKACJA TOP 5:
 ${reportData.top5.join('\n')}
 
-Aktualny lider: ${reportData.leader}`;
+Aktualny lider: ${reportData.leader}
+            `;
             
             // Pobierz raport jako plik tekstowy
             const blob = new Blob([reportText], { type: 'text/plain' });
@@ -1753,6 +1874,23 @@ Aktualny lider: ${reportData.leader}`;
             alertsContainer.innerHTML = '';
             
             const alerts = [];
+            
+            // Sprawdź status chmury
+            if (state.cloudStatus === 'offline') {
+                alerts.push({
+                    type: 'warning',
+                    message: 'Brak połączenia z chmurą - dane tylko lokalne',
+                    action: 'manualSync'
+                });
+            }
+            
+            if (state.pendingChanges) {
+                alerts.push({
+                    type: 'warning',
+                    message: 'Niesynchronizowane zmiany - kliknij Synchronizuj',
+                    action: 'manualSync'
+                });
+            }
             
             // Sprawdź czy są kierowcy
             if (state.drivers.length === 0) {
@@ -1829,7 +1967,7 @@ Aktualny lider: ${reportData.leader}`;
                 if (alert.action) {
                     const button = document.createElement('button');
                     button.className = "text-xs text-[#8B0000] hover:text-white ml-2";
-                    button.textContent = "Napraw";
+                    button.textContent = alert.action === 'manualSync' ? "Synchronizuj" : "Napraw";
                     button.onclick = () => {
                         if (alert.action === 'addDriver') {
                             switchAdminModule('drivers');
@@ -1840,6 +1978,8 @@ Aktualny lider: ${reportData.leader}`;
                             switchAdminModule('tables');
                         } else if (alert.action === 'editStages') {
                             loadStagesForEdit();
+                        } else if (alert.action === 'manualSync') {
+                            manualSync();
                         }
                     };
                     message.appendChild(button);
@@ -1871,6 +2011,10 @@ Aktualny lider: ${reportData.leader}`;
                 hour: '2-digit',
                 minute: '2-digit'
             });
+            
+            // Aktualizuj status synchronizacji
+            const syncTime = state.lastSync ? state.lastSync.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'}) : 'Nigdy';
+            document.getElementById('last-cloud-sync').textContent = syncTime;
         }
 
         function loadRoundsForEdit() {
@@ -1941,134 +2085,2176 @@ Aktualny lider: ${reportData.leader}`;
             
             addDiv.appendChild(addInput);
             addDiv.appendChild(addButton);
-
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log("Inicjalizacja aplikacji...");
-    
-    // 1. Załaduj dane z LocalStorage
-    await loadFromStorage();
-    
-    // 2. Ukryj ekran ładowania
-    document.getElementById('loading-state').style.display = 'none';
-    
-    // 3. Pokaż pierwszego lidera (kierowcę)
-    showLeader('driver');
-    
-    // 4. Rozpocznij rotację liderów
-    startLeaderRotation();
-    
-    // 5. Zaktualizuj statystyki na dashboardzie
-    if (document.getElementById('module-dashboard')) {
-        updateStats();
-        renderChangeLogs();
-        renderDataAlerts();
-        updateTournamentSummary();
-        loadRoundsForEdit();
-    }
-    
-    console.log("Aplikacja zainicjalizowana!");
-    
-    // 6. Dodaj event listener do zapisu przy zamknięciu strony
-    window.addEventListener('beforeunload', function() {
-        if (state.lastSaveTime && (Date.now() - state.lastSaveTime) > 30000) {
-            saveToStorage();
+            container.appendChild(addDiv);
         }
-    });
-});
 
-// Jeśli strona już jest załadowana (np. przy ponownym wejściu)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    // DOM już załadowany
-    initApp();
-}
+        function addStageFromDashboard(roundIndex) {
+            const input = document.getElementById('new-stage-dashboard');
+            const name = input.value.trim();
+            
+            if (name) {
+                state.rounds[roundIndex].stages.push(name);
+                input.value = '';
+                loadStagesForEdit();
+                saveToLocalStorage();
+                refreshAllViews();
+                addLog(`Dodano odcinek: ${name} do ${state.rounds[roundIndex].name}`, "system");
+                showAdminStatus("Odcinek dodany");
+            }
+        }
 
-async function initApp() {
-    try {
-        console.log("Inicjalizacja...");
-        await loadFromStorage();
-        hideLoading();
-        showLeader('driver');
-        startLeaderRotation();
-        console.log("Gotowe!");
-    } catch (error) {
-        console.error("Błąd inicjalizacji:", error);
-        hideLoading();
-        document.getElementById('driver-leader-name').textContent = "Błąd ładowania";
-        document.getElementById('constructor-leader-name').textContent = "Błąd ładowania";
-    }
-}
+        function deleteStageFromDashboard(roundIndex, stageIndex) {
+            if (confirm("Czy na pewno usunąć ten odcinek? Wszystkie wyniki z tego odcinka również zostaną usunięte.")) {
+                const stageName = state.rounds[roundIndex].stages[stageIndex];
+                
+                // Usuń odcinek
+                state.rounds[roundIndex].stages.splice(stageIndex, 1);
+                
+                // Usuń wyniki z tego odcinka
+                state.results = state.results.filter(result => !(result.r === roundIndex && result.s === stageIndex));
+                
+                // Aktualizuj indeksy wyników dla kolejnych odcinków
+                state.results.forEach(result => {
+                    if (result.r === roundIndex && result.s > stageIndex) {
+                        result.s--;
+                    }
+                });
+                
+                loadStagesForEdit();
+                saveToLocalStorage();
+                refreshAllViews();
+                addLog(`Usunięto odcinek: ${stageName} z ${state.rounds[roundIndex].name}`, "system");
+                showAdminStatus("Odcinek usunięty");
+            }
+        }
 
-function hideLoading() {
-    const loadingEl = document.getElementById('loading-state');
-    if (loadingEl) {
-        loadingEl.style.display = 'none';
-    }
-}
+        function saveStageEdits() {
+            const select = document.getElementById('dashboard-round-select');
+            const roundIndex = parseInt(select.value);
+            
+            if (isNaN(roundIndex) || !state.rounds[roundIndex]) {
+                showAdminStatus("Wybierz rajd", true);
+                return;
+            }
+            
+            const inputs = document.querySelectorAll('#stage-edit-container input[type="text"]:not(#new-stage-dashboard)');
+            let hasChanges = false;
+            
+            inputs.forEach(input => {
+                const stageIndex = parseInt(input.dataset.index);
+                const newName = input.value.trim();
+                
+                if (state.rounds[roundIndex].stages[stageIndex] !== newName) {
+                    const oldName = state.rounds[roundIndex].stages[stageIndex];
+                    state.rounds[roundIndex].stages[stageIndex] = newName;
+                    hasChanges = true;
+                    addLog(`Zmieniono nazwę odcinka: ${oldName} → ${newName}`, "system");
+                }
+            });
+            
+            if (hasChanges) {
+                saveToLocalStorage();
+                refreshAllViews();
+                showAdminStatus("Zmiany zapisane");
+            } else {
+                showAdminStatus("Brak zmian do zapisania");
+            }
+        }
 
-// Start rotacji liderów
-function startLeaderRotation() {
-    if (state.leaderRotationInterval) {
-        clearInterval(state.leaderRotationInterval);
-    }
-    
-    state.leaderRotationInterval = setInterval(() => {
-        const nextLeader = state.currentLeader === 'driver' ? 'constructor' : 'driver';
-        showLeader(nextLeader);
-    }, 5000); // Zmiana co 5 sekund
-}
+        function testScoringRules() {
+            const position = parseInt(document.getElementById('test-position').value);
+            const condition = parseInt(document.getElementById('test-condition').value);
+            const firstTwoInput = document.getElementById('test-first-two').value;
+            const thirdPosition = parseInt(document.getElementById('test-third').value);
+            
+            // Punkty za miejsce
+            const pointsSystem = [15, 12, 10, 8, 6, 4, 2, 1];
+            const positionPoints = position <= pointsSystem.length ? pointsSystem[position - 1] : 0;
+            
+            // Punkty za stan auta
+            const conditionPoints = condition;
+            
+            // Punkty wyrównawcze
+            let equalizationPoints = 0;
+            let equalizationLogic = '';
+            
+            if (firstTwoInput && firstTwoInput.trim() !== '') {
+                const positions = firstTwoInput.split(',').map(p => parseInt(p.trim()));
+                if (positions.length === 2) {
+                    const [pos1, pos2] = positions;
+                    const avgPosition = (pos1 + pos2) / 2;
+                    
+                    // Symulacja dla 6 i 8 graczy
+                    if (avgPosition > 5 && thirdPosition <= 3) {
+                        equalizationPoints = 4;
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>5) i 3. etap: ${thirdPosition} (≤3) = +4 PKT`;
+                    } else if (avgPosition > 6 && thirdPosition <= 4) {
+                        equalizationPoints = 4;
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>6) i 3. etap: ${thirdPosition} (≤4) = +4 PKT`;
+                    } else {
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)}, 3. etap: ${thirdPosition} = 0 PKT wyrównawczych`;
+                    }
+                }
+            }
+            
+            const totalPoints = positionPoints + conditionPoints + equalizationPoints;
+            
+            const resultText = `
+            WYNIK SYMULACJI:
+            • Miejsce: ${position}. = ${positionPoints} PKT
+            • Stan auta: ${condition === 2 ? 'Czysty' : condition === 1 ? 'Lekkie uszk.' : 'Uszkodzenia'} = +${conditionPoints} PKT
+            • ${equalizationLogic}
+            • SUMA: ${totalPoints} PKT
+            `;
+            
+            document.getElementById('test-result-text').textContent = resultText;
+            document.getElementById('test-result').classList.remove('hidden');
+            
+            addLog("Przeprowadzono test reguł punktacji", "system");
+        }
 
-            function showLeader(type) {
-    state.currentLeader = type;
-    
-    // Aktualizuj przyciski
-    document.querySelectorAll('.leader-dot').forEach(dot => {
-        dot.classList.remove('active');
-    });
-    document.querySelector(`.leader-dot[data-target="${type}"]`).classList.add('animation');
-    
-    // Ukryj wszystkie panele
-    document.getElementById('leader-driver').style.opacity = '0';
-    document.getElementById('leader-constructor').style.opacity = '0';
-    
-    // Pokaż odpowiedni panel z animacją
-    const leaderElement = document.getElementById(`leader-${type}`);
-    leaderElement.style.opacity = '1';
-    
-    // Załaduj aktualne dane lidera
-    if (type === 'driver') {
-        const leader = calculateDriverLeader();
-        document.getElementById('driver-leader-name').textContent = leader.name || "Brak danych";
-        document.getElementById('driver-leader-points').textContent = leader.total || 0;
-    } else {
-        const leader = calculateConstructorLeader();
-        document.getElementById('constructor-leader-name').textContent = leader.name || "Brak danych";
-        document.getElementById('constructor-leader-points').textContent = leader.total || 0;
-    }
-}
+        // --- NOWE FUNKCJE DLA MODUŁU TABELE ---
+        
+        function loadTableStages() {
+            const roundSelect = document.getElementById('table-round-select');
+            const stageSelect = document.getElementById('table-stage-select');
+            const roundIndex = parseInt(roundSelect.value);
+            
+            if (isNaN(roundIndex) || !state.rounds[roundIndex]) {
+                stageSelect.innerHTML = '<option value="">Wybierz odcinek...</option>';
+                return;
+            }
+            
+            const round = state.rounds[roundIndex];
+            stageSelect.innerHTML = '<option value="">Wybierz odcinek...</option>';
+            
+            round.stages.forEach((stage, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = stage;
+                stageSelect.appendChild(option);
+            });
+        }
+        
+        function loadTableResults() {
+            const roundSelect = document.getElementById('table-round-select');
+            const stageSelect = document.getElementById('table-stage-select');
+            const roundIndex = parseInt(roundSelect.value);
+            const stageIndex = parseInt(stageSelect.value);
+            
+            if (isNaN(roundIndex) || isNaN(stageIndex)) {
+                document.getElementById('table-stage-name').textContent = "BRAK WYBORU";
+                document.getElementById('table-results-body').innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 font-mono text-sm">Wybierz rajd i odcinek</td></tr>';
+                document.getElementById('table-driver-count').textContent = "0";
+                return;
+            }
+            
+            const round = state.rounds[roundIndex];
+            const stage = round.stages[stageIndex];
+            
+            document.getElementById('table-stage-name').textContent = `${round.name} - ${stage}`;
+            document.getElementById('table-info').textContent = `${round.name} - ${stage}`;
+            
+            // Renderuj tabelę z wynikami
+            renderTableResults(roundIndex, stageIndex);
+        }
+        
+        function renderTableResults(roundIndex, stageIndex) {
+            const tbody = document.getElementById('table-results-body');
+            tbody.innerHTML = '';
+            
+            if (state.drivers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 font-mono text-sm">Brak zarejestrowanych kierowców. Dodaj kierowców w zakładce "Kierowcy".</td></tr>';
+                document.getElementById('table-driver-count').textContent = "0";
+                return;
+            }
+            
+            // Znajdź istniejące wyniki dla tego odcinka
+            const existingResults = {};
+            state.results.forEach(result => {
+                if (result.r === roundIndex && result.s === stageIndex) {
+                    existingResults[result.d] = {
+                        time: result.time,
+                        cp: result.cp
+                    };
+                }
+            });
+            
+            // Renderuj wiersze dla każdego kierowcy
+            state.drivers.forEach((driver, index) => {
+                const existingResult = existingResults[driver.id] || {};
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#151515] transition-colors border-b border-[#222]";
+                tr.dataset.driverId = driver.id;
+                
+                tr.innerHTML = `
+                    <td class="p-3 text-gray-500 font-mono">${index + 1}</td>
+                    <td class="p-3 font-mono font-bold text-white">${driver.name}</td>
+                    <td class="p-3 font-mono text-gray-400">${driver.team}</td>
+                    <td class="p-3 text-center">
+                        <input type="text" 
+                               class="table-input time-input" 
+                               value="${existingResult.time || ''}" 
+                               placeholder="MM:SS.ms lub DSQ/DNF"
+                               data-driver-id="${driver.id}"
+                               data-field="time">
+                    </td>
+                    <td class="p-3 text-center">
+                        <select class="table-select condition-select" data-driver-id="${driver.id}" data-field="condition">
+                            <option value="2" ${existingResult.cp === 2 ? 'selected' : ''}>Czysty (+2)</option>
+                            <option value="1" ${existingResult.cp === 1 ? 'selected' : ''}>Lekkie uszk. (+1)</option>
+                            <option value="0" ${existingResult.cp === 0 || !existingResult.cp ? 'selected' : ''}>Uszkodzenia (0)</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="saveSingleDriverResult(${driver.id})" class="btn-primary quick-save-btn">ZAPISZ</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('table-driver-count').textContent = state.drivers.length;
+        }
+        
+        function saveSingleDriverResult(driverId) {
+            const roundIndex = parseInt(document.getElementById('table-round-select').value);
+            const stageIndex = parseInt(document.getElementById('table-stage-select').value);
+            
+            if (isNaN(roundIndex) || isNaN(stageIndex)) {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+                return;
+            }
+            
+            const timeInput = document.querySelector(`input[data-driver-id="${driverId}"][data-field="time"]`);
+            const conditionSelect = document.querySelector(`select[data-driver-id="${driverId}"][data-field="condition"]`);
+            
+            if (!timeInput || !conditionSelect) {
+                showAdminStatus("Nie znaleziono danych kierowcy", true);
+                return;
+            }
+            
+            const timeStr = timeInput.value.trim().toUpperCase();
+            const conditionPoints = parseInt(conditionSelect.value);
+            
+            if (!timeStr) {
+                showAdminStatus("Wprowadź czas", true);
+                return;
+            }
+            
+            // Sprawdź czy to DSQ lub DNF
+            let msValue;
+            if (timeStr === "DSQ" || timeStr === "DNF") {
+                msValue = timeStr;
+            } else {
+                // Sprawdź format czasu
+                if (!timeStr.includes(':') || !timeStr.includes('.')) {
+                    showAdminStatus("Wprowadź poprawny czas (MM:SS.ms) lub DSQ/DNF", true);
+                    return;
+                }
+                
+                try {
+                    msValue = parseTime(timeStr);
+                } catch(e) {
+                    showAdminStatus("Błąd formatu czasu. Użyj MM:SS.ms lub DSQ/DNF", true);
+                    return;
+                }
+            }
+            
+            // DSQ i DNF nie dostają punktów bonusowych
+            const finalConditionPoints = (timeStr === "DSQ" || timeStr === "DNF") ? 0 : conditionPoints;
+            
+            // Usuń istniejący wynik dla tego kierowcy na tym odcinku
+            state.results = state.results.filter(res => !(res.r === roundIndex && res.s === stageIndex && res.d === driverId));
+            
+            // Dodaj nowy wynik
+            state.results.push({
+                r: roundIndex,
+                s: stageIndex,
+                d: driverId,
+                time: timeStr,
+                ms: msValue,
+                cp: finalConditionPoints
+            });
+            
+            saveToLocalStorage();
+            showAdminStatus("Zapisano wynik kierowcy");
+            
+            const driver = state.drivers.find(d => d.id === driverId);
+            const roundName = state.rounds[roundIndex]?.name || `Rajd ${roundIndex+1}`;
+            const stageName = state.rounds[roundIndex]?.stages[stageIndex] || `OS ${stageIndex+1}`;
+            addLog(`Zapisano wynik: ${driver?.name || 'Nieznany'} - ${roundName} - ${stageName}: ${timeStr}`, "system");
+        }
+        
+        function saveTableResults() {
+            const roundIndex = parseInt(document.getElementById('table-round-select').value);
+            const stageIndex = parseInt(document.getElementById('table-stage-select').value);
+            
+            if (isNaN(roundIndex) || isNaN(stageIndex)) {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+                return;
+            }
+            
+            let savedCount = 0;
+            let errorCount = 0;
+            
+            // Zbierz wszystkie dane z tabeli
+            const timeInputs = document.querySelectorAll('input[data-field="time"]');
+            const conditionSelects = document.querySelectorAll('select[data-field="condition"]');
+            
+            // Usuń istniejące wyniki dla tego odcinka
+            state.results = state.results.filter(res => !(res.r === roundIndex && res.s === stageIndex));
+            
+            // Przetwarzaj każdego kierowcę
+            for (let i = 0; i < timeInputs.length; i++) {
+                const timeInput = timeInputs[i];
+                const conditionSelect = conditionSelects[i];
+                
+                const driverId = parseInt(timeInput.dataset.driverId);
+                const timeStr = timeInput.value.trim().toUpperCase();
+                const conditionPoints = parseInt(conditionSelect.value);
+                
+                // Jeśli czas jest pusty, pomiń
+                if (!timeStr) {
+                    continue;
+                }
+                
+                // Sprawdź czy to DSQ lub DNF
+                let msValue;
+                if (timeStr === "DSQ" || timeStr === "DNF") {
+                    msValue = timeStr;
+                } else {
+                    // Sprawdź format czasu
+                    if (!timeStr.includes(':') || !timeStr.includes('.')) {
+                        errorCount++;
+                        continue;
+                    }
+                    
+                    try {
+                        msValue = parseTime(timeStr);
+                    } catch(e) {
+                        errorCount++;
+                        continue;
+                    }
+                }
+                
+                // DSQ i DNF nie dostają punktów bonusowych
+                const finalConditionPoints = (timeStr === "DSQ" || timeStr === "DNF") ? 0 : conditionPoints;
+                
+                // Dodaj wynik
+                state.results.push({
+                    r: roundIndex,
+                    s: stageIndex,
+                    d: driverId,
+                    time: timeStr,
+                    ms: msValue,
+                    cp: finalConditionPoints
+                });
+                
+                savedCount++;
+            }
+            
+            saveToLocalStorage();
+            refreshAllViews();
+            
+            if (errorCount > 0) {
+                showAdminStatus(`Zapisano ${savedCount} wyników, ${errorCount} błędów`, true);
+            } else {
+                showAdminStatus(`Zapisano ${savedCount} wyników`);
+            }
+            
+            const roundName = state.rounds[roundIndex]?.name || `Rajd ${roundIndex+1}`;
+            const stageName = state.rounds[roundIndex]?.stages[stageIndex] || `OS ${stageIndex+1}`;
+            addLog(`Zapisano wyniki dla: ${roundName} - ${stageName} (${savedCount} wyników)`, "system");
+        }
+        
+        function saveAllTableResults() {
+            saveTableResults();
+        }
+        
+        function refreshTableResults() {
+            const roundIndex = parseInt(document.getElementById('table-round-select').value);
+            const stageIndex = parseInt(document.getElementById('table-stage-select').value);
+            
+            if (!isNaN(roundIndex) && !isNaN(stageIndex)) {
+                renderTableResults(roundIndex, stageIndex);
+                showAdminStatus("Tabela odświeżona");
+            } else {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+            }
+        }
+        
+        function clearTableResults() {
+            const roundIndex = parseInt(document.getElementById('table-round-select').value);
+            const stageIndex = parseInt(document.getElementById('table-stage-select').value);
+            
+            if (isNaN(roundIndex) || isNaN(stageIndex)) {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+                return;
+            }
+            
+            if (confirm("Czy na pewno wyczyścić wszystkie wyniki dla tego odcinka?")) {
+                // Usuń wyniki dla tego odcinka
+                state.results = state.results.filter(res => !(res.r === roundIndex && res.s === stageIndex));
+                
+                saveToLocalStorage();
+                refreshTableResults();
+                refreshAllViews();
+                showAdminStatus("Wyniki wyczyszczone");
+                
+                const roundName = state.rounds[roundIndex]?.name || `Rajd ${roundIndex+1}`;
+                const stageName = state.rounds[roundIndex]?.stages[stageIndex] || `OS ${stageIndex+1}`;
+                addLog(`Wyczyszczono wyniki dla: ${roundName} - ${stageName}`, "system");
+            }
+        }
+        
+        function addMissingDriversToTable() {
+            refreshTableResults();
+            showAdminStatus("Wszyscy kierowcy dodani do tabeli");
+        }
+        
+        function copyTimesFromPreviousStage() {
+            const roundIndex = parseInt(document.getElementById('table-round-select').value);
+            const stageIndex = parseInt(document.getElementById('table-stage-select').value);
+            
+            if (isNaN(roundIndex) || isNaN(stageIndex)) {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+                return;
+            }
+            
+            if (stageIndex === 0) {
+                showAdminStatus("To jest pierwszy odcinek w rajdzie", true);
+                return;
+            }
+            
+            const previousStageIndex = stageIndex - 1;
+            const previousResults = {};
+            
+            // Zbierz wyniki z poprzedniego odcinka
+            state.results.forEach(result => {
+                if (result.r === roundIndex && result.s === previousStageIndex) {
+                    previousResults[result.d] = {
+                        time: result.time,
+                        cp: result.cp
+                    };
+                }
+            });
+            
+            // Zastosuj wyniki do bieżącej tabeli
+            Object.keys(previousResults).forEach(driverId => {
+                const result = previousResults[driverId];
+                const timeInput = document.querySelector(`input[data-driver-id="${driverId}"][data-field="time"]`);
+                const conditionSelect = document.querySelector(`select[data-driver-id="${driverId}"][data-field="condition"]`);
+                
+                if (timeInput && conditionSelect) {
+                    timeInput.value = result.time;
+                    conditionSelect.value = result.cp.toString();
+                }
+            });
+            
+            showAdminStatus("Skopiowano czasy z poprzedniego odcinka");
+            addLog(`Skopiowano czasy z poprzedniego odcinka`, "system");
+        }
+        
+        function applySameTimeToAll() {
+            const timeStr = prompt("Wprowadź czas do zastosowania dla wszystkich kierowców (MM:SS.ms lub DSQ/DNF):", "03:00.000");
+            
+            if (timeStr === null) return;
+            
+            const timeInputs = document.querySelectorAll('input[data-field="time"]');
+            timeInputs.forEach(input => {
+                input.value = timeStr.trim().toUpperCase();
+            });
+            
+            showAdminStatus("Czas zastosowany dla wszystkich kierowców");
+        }
+        
+        function setAllCarsClean() {
+            const conditionSelects = document.querySelectorAll('select[data-field="condition"]');
+            conditionSelects.forEach(select => {
+                select.value = "2";
+            });
+            
+            showAdminStatus("Wszystkie auta ustawione jako czyste");
+        }
+        
+        function setAllTimesDNF() {
+            const timeInputs = document.querySelectorAll('input[data-field="time"]');
+            timeInputs.forEach(input => {
+                input.value = "DNF";
+            });
+            
+            showAdminStatus("Wszystkie czasy ustawione jako DNF");
+        }
+        
+        function previewStageResults() {
+            const roundIndex = parseInt(document.getElementById('table-round-select').value);
+            const stageIndex = parseInt(document.getElementById('table-stage-select').value);
+            
+            if (isNaN(roundIndex) || isNaN(stageIndex)) {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+                return;
+            }
+            
+            // Zbierz dane z tabeli
+            const timeInputs = document.querySelectorAll('input[data-field="time"]');
+            const results = [];
+            
+            for (let i = 0; i < timeInputs.length; i++) {
+                const timeInput = timeInputs[i];
+                const driverId = parseInt(timeInput.dataset.driverId);
+                const timeStr = timeInput.value.trim().toUpperCase();
+                
+                if (!timeStr) continue;
+                
+                const driver = state.drivers.find(d => d.id === driverId);
+                if (!driver) continue;
+                
+                // Konwertuj czas na milisekundy dla sortowania
+                let timeMs;
+                if (timeStr === "DSQ") {
+                    timeMs = Infinity;
+                } else if (timeStr === "DNF") {
+                    timeMs = Infinity - 1;
+                } else {
+                    try {
+                        timeMs = parseTime(timeStr);
+                    } catch(e) {
+                        timeMs = Infinity;
+                    }
+                }
+                
+                results.push({
+                    driverId: driverId,
+                    driverName: driver.name,
+                    timeStr: timeStr,
+                    timeMs: timeMs
+                });
+            }
+            
+            // Sortuj wyniki
+            results.sort((a, b) => a.timeMs - b.timeMs);
+            
+            // Wyświetl podgląd
+            let previewText = "PODGLĄD WYNIKÓW:\n\n";
+            results.forEach((result, index) => {
+                const position = index + 1;
+                previewText += `${position}. ${result.driverName}: ${result.timeStr}\n`;
+            });
+            
+            alert(previewText);
+        }
+        
+        function calculateStageRanking() {
+            previewStageResults();
+        }
+        
+        function initTableModule() {
+            const roundSelect = document.getElementById('table-round-select');
+            const stageSelect = document.getElementById('table-stage-select');
+            
+            // Wypełnij listę rajdów
+            roundSelect.innerHTML = '<option value="">Wybierz rajd...</option>';
+            state.rounds.forEach((round, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${round.name} (${round.stages.length} OS)`;
+                roundSelect.appendChild(option);
+            });
+            
+            // Ustaw pierwszy rajd jeśli istnieje
+            if (state.rounds.length > 0) {
+                roundSelect.value = 0;
+                loadTableStages();
+                
+                // Ustaw pierwszy odcinek jeśli istnieje
+                if (state.rounds[0].stages.length > 0) {
+                    stageSelect.value = 0;
+                    loadTableResults();
+                }
+            }
+        }
 
-            function calculateDriverLeader() {
-    if (state.drivers.length === 0) {
-        return { name: "Brak danych", total: 0 };
-    }
-    
-    // Oblicz punkty dla każdego kierowcy
-    const driversWithPoints = state.drivers.map(driver => {
-        const total = (driver.points || []).reduce((sum, points) => sum + points, 0) + (driver.equalizationPoints || 0);
-        return { ...driver, total };
-    });
-    
-    // Posortuj malejąco
-    driversWithPoints.sort((a, b) => b.total - a.total);
-    
-    return driversWithPoints[0];
-}
+        // --- HELPER FUNCTIONS ---
+        function parseTime(timeStr) {
+            if (timeStr.toUpperCase() === "DSQ" || timeStr.toUpperCase() === "DNF") {
+                return timeStr.toUpperCase();
+            }
+            
+            const parts = timeStr.split(':');
+            if (parts.length < 2) throw new Error("Format");
+            const min = parseInt(parts[0]);
+            const secParts = parts[1].split('.');
+            const sec = parseInt(secParts[0]);
+            const ms = parseInt(secParts[1] || 0);
+            return (min * 60 * 1000) + (sec * 1000) + ms;
+        }
 
-function calculateConstructorLeader() {
-    // Logika obliczania lidera konstruktorów
-    // ...
-    return { name: "Brak danych", total: 0 };
-}
-            </script>
+        function formatTimeDiff(msDiff) {
+            if (msDiff === "DSQ") return "DSQ";
+            if (msDiff === "DNF") return "DNF";
+            
+            const sec = Math.floor(msDiff / 1000);
+            const ms = msDiff % 1000;
+            return `+${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+        }
+
+        function formatTimeForDisplay(ms) {
+            if (ms === "DSQ") return '<span class="status-dsq-text">DSQ</span>';
+            if (ms === "DNF") return '<span class="status-dnf-text">DNF</span>';
+            
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const milliseconds = ms % 1000;
+            
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+        }
+
+        function calculateTotalTimeForDriverInRound(driverId, roundIndex) {
+            let totalMs = 0;
+            const roundResults = state.results.filter(res => res.r === roundIndex && res.d === driverId);
+            
+            // Sprawdź czy kierowca ma DSQ w którymkolwiek OS-ie w tej rundzie
+            const hasDSQ = roundResults.some(result => result.time === "DSQ");
+            if (hasDSQ) {
+                return "DSQ";
+            }
+            
+            // Zbierz wszystkie czasy które nie są DSQ
+            const validResults = roundResults.filter(result => result.time !== "DSQ");
+            
+            // Jeśli nie ma żadnych wyników, zwróć null
+            if (validResults.length === 0) {
+                return null;
+            }
+            
+            // Znajdź najgorszy czas wśród wszystkich kierowców w tej rundzie (dla obliczeń DNF)
+            let worstTimeInRound = 0;
+            const allRoundResults = state.results.filter(res => res.r === roundIndex);
+            allRoundResults.forEach(result => {
+                if (result.time !== "DSQ" && result.time !== "DNF" && typeof result.ms === 'number') {
+                    worstTimeInRound = Math.max(worstTimeInRound, result.ms);
+                }
+            });
+            
+            // Oblicz sumę czasów
+            validResults.forEach(result => {
+                if (result.time === "DNF") {
+                    // DNF = najgorszy czas + 20 sekund
+                    totalMs += worstTimeInRound + 20000;
+                } else if (typeof result.ms === 'number') {
+                    totalMs += result.ms;
+                }
+            });
+            
+            return totalMs;
+        }
+
+        function getRoundStandings(roundIndex) {
+            const driverTimes = [];
+            
+            // Sprawdź, którzy kierowcy mają wyniki w tej rundzie
+            const driversInRound = [...new Set(state.results
+                .filter(res => res.r === roundIndex)
+                .map(res => res.d))];
+            
+            driversInRound.forEach(driverId => {
+                const totalTime = calculateTotalTimeForDriverInRound(driverId, roundIndex);
+                if (totalTime !== null) {
+                    driverTimes.push({
+                        driverId: driverId,
+                        totalMs: totalTime
+                    });
+                }
+            });
+            
+            // Sortuj od najszybszego do najwolniejszego
+            // DSQ zawsze na końcu
+            driverTimes.sort((a, b) => {
+                if (a.totalMs === "DSQ") return 1;
+                if (b.totalMs === "DSQ") return -1;
+                if (a.totalMs === "DNF") return 1;
+                if (b.totalMs === "DNF") return -1;
+                return a.totalMs - b.totalMs;
+            });
+            
+            return driverTimes;
+        }
+
+        function calculateRoundPoints(roundIndex) {
+            const standings = getRoundStandings(roundIndex);
+            const pointsSystem = [15, 12, 10, 8, 6, 4, 2, 1];
+            
+            // Resetuj punkty dla tej rundy
+            state.drivers.forEach(driver => {
+                driver.points[roundIndex] = 0;
+            });
+            
+            let position = 0;
+            standings.forEach((standing) => {
+                const driver = state.drivers.find(d => d.id === standing.driverId);
+                if (driver) {
+                    if (standing.totalMs === "DSQ") {
+                        driver.points[roundIndex] = 0;
+                    } else if (position < pointsSystem.length) {
+                        driver.points[roundIndex] = pointsSystem[position];
+                        position++;
+                    } else {
+                        driver.points[roundIndex] = 0;
+                    }
+                }
+            });
+        }
+
+        // --- FUNKCJA DO OBLICZANIA PUNKTÓW WYRÓWNAWCZYCH ---
+        function calculateEqualizationPoints() {
+            // Resetuj punkty wyrównawcze
+            state.drivers.forEach(driver => {
+                driver.equalizationPoints = 0;
+            });
+            
+            const totalDrivers = state.drivers.length;
+            
+            // Sprawdzamy tylko jeśli mamy przynajmniej 3 rundy
+            if (state.rounds.length < 3) {
+                return;
+            }
+            
+            // Obliczamy pozycje w pierwszych 2 rundach
+            const firstTwoRoundsStandings = [];
+            
+            state.drivers.forEach(driver => {
+                // Suma punktów z pierwszych 2 rund
+                const firstTwoRoundsPoints = (driver.points[0] || 0) + (driver.points[1] || 0);
+                firstTwoRoundsStandings.push({
+                    driverId: driver.id,
+                    points: firstTwoRoundsPoints
+                });
+            });
+            
+            // Sortujemy malejąco według punktów
+            firstTwoRoundsStandings.sort((a, b) => b.points - a.points);
+            
+            // Przypisujemy pozycje
+            const positions = {};
+            firstTwoRoundsStandings.forEach((standing, index) => {
+                positions[standing.driverId] = index + 1;
+            });
+            
+            // Obliczamy pozycję w 3. rundzie
+            const thirdRoundStandings = getRoundStandings(2);
+            
+            // Przypisujemy pozycje w 3. rundzie
+            const thirdRoundPositions = {};
+            thirdRoundStandings.forEach((standing, index) => {
+                thirdRoundPositions[standing.driverId] = index + 1;
+            });
+            
+            // Sprawdzamy warunki dla każdego kierowcy
+            state.drivers.forEach(driver => {
+                const positionInFirstTwo = positions[driver.id];
+                const positionInThird = thirdRoundPositions[driver.id];
+                
+                if (!positionInFirstTwo || !positionInThird) {
+                    return;
+                }
+                
+                if (totalDrivers === 6) {
+                    if (positionInFirstTwo > 5 && positionInThird <= 3) {
+                        driver.equalizationPoints = 4;
+                    }
+                } else if (totalDrivers === 8) {
+                    if (positionInFirstTwo > 6 && positionInThird <= 4) {
+                        driver.equalizationPoints = 4;
+                    }
+                }
+            });
+        }
+
+        function calculateAllRoundPoints() {
+            // Resetuj wszystkie punkty
+            state.drivers.forEach(driver => {
+                driver.points = new Array(state.rounds.length).fill(0);
+            });
+            
+            // Dla każdej rundy oblicz punkty
+            for (let i = 0; i < state.rounds.length; i++) {
+                calculateRoundPoints(i);
+            }
+            
+            // Oblicz punkty wyrównawcze
+            calculateEqualizationPoints();
+            
+            // Zapisz do chmury
+            saveToLocalStorage();
+        }
+
+        function calculateDriverStats() {
+            // Najpierw przelicz punkty za miejsca w rundach i wyrównawcze
+            calculateAllRoundPoints();
+            
+            return state.drivers.map(d => {
+                const basePoints = d.points.reduce((a,b)=>a+b, 0);
+                const bonusPoints = state.results.filter(r => r.d === d.id).reduce((a, b) => {
+                    // DSQ i DNF nie dostają punktów bonusowych
+                    if (b.time === "DSQ" || b.time === "DNF") {
+                        return a;
+                    }
+                    return a + (b.cp || 0);
+                }, 0);
+                const equalizationPoints = d.equalizationPoints || 0;
+                
+                return {
+                    ...d,
+                    bonus: bonusPoints,
+                    equalization: equalizationPoints,
+                    total: basePoints + bonusPoints + equalizationPoints
+                };
+            });
+        }
+
+        function calculateConstructorStats() {
+            const teams = {};
+            const teamDrivers = {};
+            
+            state.drivers.forEach(d => {
+                if(!teams[d.team]) {
+                    teams[d.team] = 0;
+                    teamDrivers[d.team] = [];
+                }
+                const driverStats = calculateDriverStats().find(ds => ds.id === d.id);
+                teams[d.team] += driverStats ? driverStats.total : 0;
+                teamDrivers[d.team].push(d.name);
+            });
+
+            return Object.entries(teams).sort((a,b) => b[1] - a[1]).map(([team, points]) => ({
+                team,
+                points,
+                drivers: teamDrivers[team]
+            }));
+        }
+
+        function calculateDriverLeader() {
+            const driverStats = calculateDriverStats();
+            driverStats.sort((a, b) => b.total - a.total);
+            return driverStats[0] || { name: "Brak danych", total: 0 };
+        }
+
+        function calculateConstructorLeader() {
+            const constructorStats = calculateConstructorStats();
+            return constructorStats[0] || { team: "Brak danych", points: 0 };
+        }
+
+        // --- FUNKCJE DO AKTUALIZACJI WSZYSTKICH WIDOKÓW ---
+        function refreshAllViews() {
+            // Aktualizuj liderów na stronie głównej
+            updateLeaders();
+            
+            // Aktualizuj tabele w widoku mistrzostw
+            renderDriversTable();
+            renderConstructorsTable();
+            
+            // Aktualizuj podgląd punktacji w panelu admina
+            if (state.view === 'admin') {
+                renderScoringPreview();
+            }
+            
+            // Aktualizuj listę kierowców w panelu admina jeśli jest aktywny
+            if (state.view === 'admin' && document.getElementById('admin-drivers-list')) {
+                renderAdminDrivers();
+            }
+            
+            // Aktualizuj widok wyników jeśli jest aktywny
+            if (state.view === 'results') {
+                renderStageResults();
+            }
+            
+            // Aktualizuj widok teamów
+            updateTeamAssignments();
+        }
+
+        function recalculateAllPoints() {
+            calculateAllRoundPoints();
+            refreshAllViews();
+            showAdminStatus("Punkty przeliczone pomyślnie");
+            addLog("Przeliczono wszystkie punkty", "system");
+        }
+
+        // --- DYNAMIC LEADERS ON HOME PAGE ---
+        function updateLeaders() {
+            const driverLeader = calculateDriverLeader();
+            const constructorLeader = calculateConstructorLeader();
+            
+            document.getElementById('driver-leader-name').textContent = driverLeader.name;
+            document.getElementById('driver-leader-points').textContent = driverLeader.total;
+            
+            document.getElementById('constructor-leader-name').textContent = constructorLeader.team;
+            document.getElementById('constructor-leader-points').textContent = constructorLeader.points;
+        }
+
+        function showLeader(type) {
+            const driverEl = document.getElementById('leader-driver');
+            const constructorEl = document.getElementById('leader-constructor');
+            const driverDot = document.querySelector('[data-target="driver"]');
+            const constructorDot = document.querySelector('[data-target="constructor"]');
+            
+            if (type === 'driver') {
+                driverEl.classList.remove('opacity-0');
+                driverEl.classList.add('opacity-100', 'slide-right');
+                constructorEl.classList.remove('opacity-100', 'slide-left');
+                constructorEl.classList.add('opacity-0');
+                
+                driverDot.classList.add('active');
+                constructorDot.classList.remove('active');
+                state.currentLeader = 'driver';
+            } else {
+                constructorEl.classList.remove('opacity-0');
+                constructorEl.classList.add('opacity-100', 'slide-left');
+                driverEl.classList.remove('opacity-100', 'slide-right');
+                driverEl.classList.add('opacity-0');
+                
+                constructorDot.classList.add('active');
+                driverDot.classList.remove('active');
+                state.currentLeader = 'constructor';
+            }
+            
+            // Reset rotation interval
+            if (state.leaderRotationInterval) {
+                clearInterval(state.leaderRotationInterval);
+                startLeaderRotation();
+            }
+        }
+
+        function startLeaderRotation() {
+            if (state.leaderRotationInterval) {
+                clearInterval(state.leaderRotationInterval);
+            }
+            
+            state.leaderRotationInterval = setInterval(() => {
+                if (state.currentLeader === 'driver') {
+                    showLeader('constructor');
+                } else {
+                    showLeader('driver');
+                }
+            }, 5000);
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        function router(viewName) {
+            document.querySelectorAll('section[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`view-${viewName}`);
+            if (target) {
+                target.classList.remove('hidden');
+            }
+            document.querySelectorAll('nav button').forEach(btn => {
+               if(btn.id !== 'nav-login') btn.classList.remove('text-[#8B0000]', 'text-white');
+               else if(btn.id !== 'nav-login') btn.classList.add('text-gray-300');
+            });
+            
+            if (viewName === 'admin' && !state.isLoggedIn) {
+                router('login');
+                return;
+            }
+            
+            if(viewName === 'home') {
+                document.getElementById('nav-home')?.classList.add('text-[#8B0000]');
+                updateLeaders();
+                if (!state.leaderRotationInterval) {
+                    startLeaderRotation();
+                }
+            }
+            if(viewName === 'championship') {
+                document.getElementById('nav-champ')?.classList.add('text-[#8B0000]');
+                renderDriversTable();
+                renderConstructorsTable();
+            }
+            if(viewName === 'results') {
+                document.getElementById('nav-results')?.classList.add('text-[#8B0000]');
+                initResultsView();
+            }
+            if(viewName === 'teams') {
+                document.getElementById('nav-teams')?.classList.add('text-[#8B0000]');
+                updateTeamAssignments();
+            }
+            if(viewName === 'schedule') {
+                document.getElementById('nav-schedule')?.classList.add('text-[#8B0000]');
+            }
+            if(viewName === 'rules') {
+                document.getElementById('nav-rules')?.classList.add('text-[#8B0000]');
+            }
+
+            state.view = viewName;
+            window.scrollTo(0,0);
+        }
+
+        function switchTab(tabName) {
+            if (tabName === 'drivers') {
+                document.getElementById('tab-drivers').classList.remove('hidden');
+                document.getElementById('tab-constructors').classList.add('hidden');
+                document.getElementById('btn-drivers').className = "text-sm font-mono px-4 py-2 bg-white text-black transition-all rounded-md";
+                document.getElementById('btn-constructors').className = "text-sm font-mono px-4 py-2 text-gray-400 hover:text-white transition-all rounded-md";
+            } else {
+                document.getElementById('tab-drivers').classList.add('hidden');
+                document.getElementById('tab-constructors').classList.remove('hidden');
+                document.getElementById('btn-drivers').className = "text-sm font-mono px-4 py-2 text-gray-400 hover:text-white transition-all rounded-md";
+                document.getElementById('btn-constructors').className = "text-sm font-mono px-4 py-2 bg-white text-black transition-all rounded-md";
+            }
+        }
+
+        function switchAdminModule(moduleName) {
+            document.getElementById('module-dashboard').classList.add('hidden');
+            document.getElementById('module-tables').classList.add('hidden');
+            document.getElementById('module-drivers').classList.add('hidden');
+            document.getElementById('module-stages').classList.add('hidden');
+            document.getElementById('module-scoring').classList.add('hidden');
+            
+            ['dashboard', 'tables', 'drivers', 'stages', 'scoring'].forEach(m => {
+                const nav = document.getElementById(`admin-nav-${m}`);
+                if (nav) {
+                    nav.classList.remove('bg-[#222]', 'text-white', 'border-l-[#8B0000]');
+                    nav.classList.add('text-gray-400', 'border-l-transparent', 'hover:bg-[#1a1a1a]');
+                }
+            });
+
+            document.getElementById(`module-${moduleName}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`admin-nav-${moduleName}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-gray-400', 'border-l-transparent', 'hover:bg-[#1a1a1a]');
+                activeNav.classList.add('bg-[#222]', 'text-white', 'border-l-[#8B0000]');
+            }
+            
+            if(moduleName === 'dashboard') {
+                refreshDashboard();
+            }
+            if(moduleName === 'tables') {
+                initTableModule();
+            }
+            if(moduleName === 'stages') initAdminStages();
+            if(moduleName === 'scoring') renderScoringPreview();
+            if(moduleName === 'drivers') renderAdminDrivers();
+        }
+
+        // --- PUBLIC RESULTS LOGIC ---
+        
+        function initResultsView() {
+            const roundSelect = document.getElementById('res-round-select');
+            
+            roundSelect.innerHTML = '';
+             state.rounds.forEach((r, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = `R${r.id}: ${r.name.toUpperCase()}`;
+                roundSelect.add(opt);
+            });
+            
+            if(!roundSelect.value && state.rounds.length > 0) roundSelect.value = 0;
+            
+            roundSelect.onchange = () => {
+                populateStages(roundSelect.value);
+                renderStageResults();
+            };
+
+            if (state.rounds.length > 0) {
+                populateStages(roundSelect.value);
+                renderStageResults();
+            }
+        }
+
+        function populateStages(roundIndex) {
+            const stageSelect = document.getElementById('res-stage-select');
+            if(!state.rounds[roundIndex]) return;
+
+            const previousIdx = stageSelect.value;
+            
+            stageSelect.innerHTML = '';
+            const stages = state.rounds[roundIndex].stages;
+            
+            stages.forEach((s, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = s.toUpperCase();
+                stageSelect.add(opt);
+            });
+            
+            if(previousIdx && stages[previousIdx]) {
+                stageSelect.value = previousIdx;
+            } else {
+                stageSelect.value = 0;
+            }
+            
+            stageSelect.onchange = renderStageResults;
+        }
+
+        function changeRound(dir) {
+            const sel = document.getElementById('res-round-select');
+            let newIdx = parseInt(sel.value) + dir;
+            if(newIdx < 0) newIdx = state.rounds.length - 1;
+            if(newIdx >= state.rounds.length) newIdx = 0;
+            
+            sel.value = newIdx;
+            populateStages(newIdx);
+            renderStageResults();
+        }
+
+        function changeStage(dir) {
+            const sel = document.getElementById('res-stage-select');
+            const roundIdx = parseInt(document.getElementById('res-round-select').value);
+            
+            if(!state.rounds[roundIdx]) return;
+
+            const stageCount = state.rounds[roundIdx].stages.length;
+            let newIdx = parseInt(sel.value) + dir;
+
+            if(newIdx < 0) newIdx = stageCount - 1;
+            if(newIdx >= stageCount) newIdx = 0;
+            
+            sel.value = newIdx;
+            renderStageResults();
+        }
+
+        function renderStageResults() {
+            const tbody = document.getElementById('stage-results-body');
+            tbody.innerHTML = '';
+            
+            const rIdx = parseInt(document.getElementById('res-round-select').value);
+            const sIdx = parseInt(document.getElementById('res-stage-select').value);
+            
+            const filtered = state.results.filter(res => res.r === rIdx && res.s === sIdx);
+            
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH DLA TEGO ODCINKA</td></tr>`;
+                return;
+            }
+
+            // Rozdziel wyniki na normalne, DNF i DSQ
+            const normalResults = [];
+            const dnfResults = [];
+            const dsqResults = [];
+            
+            filtered.forEach(res => {
+                if (res.time === "DSQ") {
+                    dsqResults.push(res);
+                } else if (res.time === "DNF") {
+                    dnfResults.push(res);
+                } else {
+                    normalResults.push(res);
+                }
+            });
+            
+            // Znajdź najgorszy czas wśród normalnych wyników
+            let worstNormalTime = 0;
+            if (normalResults.length > 0) {
+                worstNormalTime = Math.max(...normalResults.map(res => res.ms));
+            }
+            
+            // Przygotuj tablicę wszystkich wyników do wyświetlenia
+            const allResults = [];
+            
+            // Normalne wyniki
+            normalResults.forEach(res => {
+                allResults.push({
+                    ...res,
+                    computedTime: res.ms,
+                    type: 'normal',
+                    displayTime: res.ms
+                });
+            });
+            
+            // DNF - dodaj 20 sekund do najgorszego czasu
+            dnfResults.forEach(res => {
+                const computedTime = worstNormalTime + 20000;
+                allResults.push({
+                    ...res,
+                    computedTime: computedTime,
+                    type: 'dnf',
+                    displayTime: computedTime
+                });
+            });
+            
+            // DSQ - zawsze na końcu
+            dsqResults.forEach(res => {
+                allResults.push({
+                    ...res,
+                    computedTime: Infinity,
+                    type: 'dsq',
+                    displayTime: "DSQ"
+                });
+            });
+            
+            // Sortuj według obliczonego czasu
+            allResults.sort((a, b) => {
+                if (a.computedTime === Infinity && b.computedTime === Infinity) return 0;
+                if (a.computedTime === Infinity) return 1;
+                if (b.computedTime === Infinity) return -1;
+                return a.computedTime - b.computedTime;
+            });
+            
+            // Znajdź czas zwycięzcy (pierwszy nie-DSQ)
+            const winner = allResults.find(r => r.type !== 'dsq');
+            const winnerTime = winner ? winner.computedTime : 0;
+            
+            allResults.forEach((res, i) => {
+                const driver = state.drivers.find(d => d.id === res.d);
+                if(!driver) return;
+                
+                let timeDisplay = '';
+                let diff = '-';
+                let rowClass = "hover:bg-[#151515] transition-colors text-gray-300";
+                let timeClass = '';
+                let diffClass = '';
+                
+                if (res.type === 'dsq') {
+                    timeDisplay = '<span class="text-red-500">DSQ</span>';
+                    diff = '<span class="text-red-500">DSQ</span>';
+                    rowClass = "hover:bg-[#151515] transition-colors";
+                    timeClass = 'text-red-500';
+                    diffClass = 'text-red-500';
+                } else if (res.type === 'dnf') {
+                    const formattedTime = formatTimeForDisplay(res.displayTime);
+                    timeDisplay = `${formattedTime}<span class="text-yellow-500 text-xs ml-1">(DNF)</span>`;
+                    
+                    if (i === 0) {
+                        diff = '-';
+                    } else {
+                        const diffMs = res.computedTime - winnerTime;
+                        diff = formatTimeDiff(diffMs);
+                    }
+                    rowClass = "hover:bg-[#151515] transition-colors";
+                    timeClass = 'text-white';
+                    diffClass = 'text-gray-500';
+                } else {
+                    // Normalny wynik
+                    timeDisplay = formatTimeForDisplay(res.displayTime);
+                    
+                    if (i === 0) {
+                        diff = '-';
+                        rowClass = "bg-zinc-200 text-black";
+                        timeClass = 'text-black font-bold';
+                        diffClass = 'text-gray-800';
+                    } else {
+                        const diffMs = res.computedTime - winnerTime;
+                        diff = formatTimeDiff(diffMs);
+                        rowClass = "hover:bg-[#151515] transition-colors";
+                        timeClass = 'text-white';
+                        diffClass = 'text-gray-500';
+                    }
+                }
+                
+                const bonusPoints = (res.time === "DSQ" || res.time === "DNF") ? '0' : `+${res.cp}`;
+                const positionClass = (i === 0 && res.type === 'normal') ? 'text-black font-bold' : 'text-gray-500';
+                
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.innerHTML = `
+                    <td class="py-3 pl-4 text-sm ${positionClass}">${i+1}</td>
+                    <td class="py-3 font-bold font-mono ${i === 0 && res.type === 'normal' ? 'text-black' : 'text-gray-300'}">${driver.name}</td>
+                    <td class="py-3 text-right font-mono tracking-wide ${timeClass}">${timeDisplay}</td>
+                    <td class="py-3 text-right text-sm font-mono ${diffClass}">${diff}</td>
+                    <td class="py-3 text-right pr-4 font-mono text-sm ${i === 0 && res.type === 'normal' ? 'text-gray-800' : 'text-gray-400'}">${bonusPoints}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- PUBLIC CHAMPIONSHIP LOGIC ---
+
+        function renderDriversTable() {
+            const tbody = document.getElementById('drivers-ranking-body');
+            const header = document.getElementById('drivers-table-header');
+            
+            // Update headers
+            header.innerHTML = '';
+            const headers = ['POZ', 'KIEROWCA', 'ZESPÓŁ'];
+            
+            // Add round headers
+            for (let i = 0; i < state.rounds.length; i++) {
+                headers.push(`R${i+1}`);
+            }
+            
+            headers.push('BONUS');
+            headers.push('WYRÓW.');
+            headers.push('SUMA');
+            
+            headers.forEach((text, index) => {
+                const th = document.createElement('th');
+                th.className = "py-4 px-4 font-normal";
+                
+                if (text === 'SUMA') {
+                    th.classList.add('text-[#8B0000]');
+                }
+                
+                if (text === 'WYRÓW.') {
+                    th.classList.add('text-grey-400', 'font-bold');
+                }
+                
+                if (text === 'BONUS') {
+                    th.classList.add('text-grey-400');
+                }
+                
+                if (index >= 3 && index < headers.length - 3) {
+                    th.classList.add('text-right');
+                } else if (text === 'BONUS' || text === 'WYRÓW.' || text === 'SUMA') {
+                    th.classList.add('text-right');
+                }
+                
+                th.textContent = text;
+                header.appendChild(th);
+            });
+            
+            // Update body
+            tbody.innerHTML = '';
+            
+            const driverStats = calculateDriverStats();
+            driverStats.sort((a, b) => b.total - a.total);
+
+            driverStats.forEach((driver, index) => {
+                const isLeader = index === 0;
+                const tr = document.createElement('tr');
+                tr.className = isLeader ? "bg-zinc-200 text-black" : "hover:bg-[#111] transition-colors border-l-2 border-transparent text-gray-300";
+                
+                // Position
+                let td = document.createElement('td');
+                td.className = `py-4 px-4 font-mono ${isLeader ? 'text-black font-bold' : 'text-gray-400'}`;
+                td.textContent = index + 1;
+                tr.appendChild(td);
+                
+                // Driver Name
+                td = document.createElement('td');
+                td.className = `py-4 px-4 font-bold ${isLeader ? 'text-black' : 'text-white'}`;
+                td.textContent = driver.name;
+                tr.appendChild(td);
+                
+                // Team
+                td = document.createElement('td');
+                td.className = `py-4 px-4 text-sm ${isLeader ? 'text-gray-600' : 'text-gray-400'}`;
+                td.textContent = driver.team;
+                tr.appendChild(td);
+                
+                // Round points
+                for (let i = 0; i < state.rounds.length; i++) {
+                    td = document.createElement('td');
+                    td.className = `py-4 px-4 text-right ${isLeader ? 'text-gray-800' : 'text-gray-500'}`;
+                    td.textContent = driver.points[i] || '-';
+                    tr.appendChild(td);
+                }
+                
+                // Bonus points
+                td = document.createElement('td');
+                td.className = `py-4 px-4 text-right font-mono ${isLeader ? 'text-gray-800' : 'text-gray-400'}`;
+                td.textContent = `+${driver.bonus}`;
+                tr.appendChild(td);
+                
+                // Equalization points
+                td = document.createElement('td');
+                const hasEqualization = driver.equalization > 0;
+                td.className = `py-4 px-4 text-right font-mono ${hasEqualization ? 'text-grey-400 font-bold' : (isLeader ? 'text-gray-800' : 'text-gray-500')}`;
+                td.textContent = hasEqualization ? `+${driver.equalization}` : '-';
+                tr.appendChild(td);
+                
+                // Total points
+                td = document.createElement('td');
+                td.className = "py-4 px-4 text-right font-bold text-lg text-[#8B0000]";
+                td.textContent = driver.total;
+                tr.appendChild(td);
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Jeśli nie ma kierowców, pokaż komunikat
+            if (driverStats.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="${headers.length}" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH. DODAJ KIEROWCÓW W PANELU ADMINA.</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+        
+        function renderConstructorsTable() {
+            const tbody = document.getElementById('constructors-ranking-body');
+            tbody.innerHTML = '';
+            
+            const constructorStats = calculateConstructorStats();
+
+            constructorStats.forEach((constructor, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#111] transition-colors";
+                
+                // Position
+                let td = document.createElement('td');
+                td.className = "py-4 px-4 text-gray-400 font-mono";
+                td.textContent = index + 1;
+                tr.appendChild(td);
+                
+                // Constructor Name
+                td = document.createElement('td');
+                td.className = "py-4 px-4 font-bold text-white";
+                td.textContent = constructor.team;
+                tr.appendChild(td);
+                
+                // Drivers
+                td = document.createElement('td');
+                td.className = "py-4 px-4 text-sm text-gray-400";
+                td.textContent = constructor.drivers.join(', ');
+                tr.appendChild(td);
+                
+                // Total Points
+                td = document.createElement('td');
+                td.className = "py-4 px-4 text-right text-[#8B0000] font-bold text-lg";
+                td.textContent = constructor.points;
+                tr.appendChild(td);
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Jeśli nie ma konstruktorów, pokaż komunikat
+            if (constructorStats.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="4" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH. DODAJ KIEROWCÓW W PANELU ADMINA.</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // --- POPRAWIONA FUNKCJA updateTeamAssignments ---
+        function updateTeamAssignments() {
+            // Inicjalizuj obiekt zespołów
+            const teams = {
+                'Ford': { driver1: '', driver2: '' },
+                'Volkswagen': { driver1: '', driver2: '' },
+                'Škoda': { driver1: '', driver2: '' },
+                'Peugeot': { driver1: '', driver2: '' },
+                'Mitsubishi': { driver1: '', driver2: '' },
+                'Citroën': { driver1: '', driver2: '' }
+            };
+            
+            // Zbierz kierowców dla każdego zespołu
+            state.drivers.forEach(driver => {
+                if (teams[driver.team]) {
+                    if (!teams[driver.team].driver1) {
+                        teams[driver.team].driver1 = driver.name;
+                    } else if (!teams[driver.team].driver2) {
+                        teams[driver.team].driver2 = driver.name;
+                    }
+                }
+            });
+            
+            // Zaktualizuj UI dla każdego zespołu
+            for (const [team, drivers] of Object.entries(teams)) {
+                // Utwórz poprawny ID zespołu
+                let teamId;
+                switch(team) {
+                    case 'Ford':
+                        teamId = 'ford';
+                        break;
+                    case 'Volkswagen':
+                        teamId = 'volkswagen';
+                        break;
+                    case 'Škoda':
+                        teamId = 'skoda';
+                        break;
+                    case 'Peugeot':
+                        teamId = 'peugeot';
+                        break;
+                    case 'Mitsubishi':
+                        teamId = 'mitsubishi';
+                        break;
+                    case 'Citroën':
+                        teamId = 'citroen';
+                        break;
+                    default:
+                        teamId = team.toLowerCase();
+                }
+                
+                const driver1El = document.getElementById(`${teamId}-driver1`);
+                const driver2El = document.getElementById(`${teamId}-driver2`);
+                
+                if (driver1El) {
+                    if (drivers.driver1) {
+                        driver1El.textContent = drivers.driver1;
+                        driver1El.classList.remove('text-gray-400');
+                        driver1El.classList.add('text-[#8B0000]');
+                    } else {
+                        driver1El.textContent = 'Do przydziału';
+                        driver1El.classList.remove('text-[#8B0000]');
+                        driver1El.classList.add('text-gray-400');
+                    }
+                }
+                
+                if (driver2El) {
+                    if (drivers.driver2) {
+                        driver2El.textContent = drivers.driver2;
+                        driver2El.classList.remove('text-gray-400');
+                        driver2El.classList.add('text-[#8B0000]');
+                    } else {
+                        driver2El.textContent = 'Do przydziału';
+                        driver2El.classList.remove('text-[#8B0000]');
+                        driver2El.classList.add('text-gray-400');
+                    }
+                }
+            }
+        }
+
+        // --- ADMIN LOGIC ---
+
+        function renderAdminDrivers() {
+            const tbody = document.getElementById('admin-drivers-list');
+            tbody.innerHTML = '';
+            
+            if (state.drivers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500 font-mono text-sm">BRAK KIEROWCÓW. DODAJ PIERWSZEGO KIEROWCĘ.</td></tr>`;
+                return;
+            }
+            
+            state.drivers.forEach(d => {
+                const tr = document.createElement('tr');
+                tr.className = "group hover:bg-[#151515] transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 text-gray-500 font-mono text-sm">#${String(d.id).padStart(3, '0')}</td>
+                    <td class="p-4 text-white font-bold font-mono">${d.name}</td>
+                    <td class="p-4 text-gray-400 text-sm font-mono">${d.team}</td>
+                    <td class="p-4 text-gray-500 text-sm font-mono">${d.car}</td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="editDriverTeamAndCar(${d.id})" class="text-xs text-blue-500 border border-blue-900 px-3 py-1 hover:bg-blue-900/20 uppercase rounded-sm">Edytuj zespół/auto</button>
+                        <button onclick="editDriverPoints(${d.id})" class="text-xs text-yellow-500 border border-yellow-900 px-3 py-1 hover:bg-yellow-900/20 uppercase rounded-sm">Edytuj punkty</button>
+                        <button onclick="deleteDriver(${d.id})" class="text-xs text-red-500 border border-red-900 px-3 py-1 hover:bg-red-900/20 uppercase rounded-sm">Usuń</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- FUNKCJE DO EDYCJI TEAMU I AUTA ---
+        function editDriverTeamAndCar(id) {
+            const driver = state.drivers.find(d => d.id === id);
+            if (!driver) return;
+            
+            const teams = ['Ford', 'Volkswagen', 'Škoda', 'Peugeot', 'Mitsubishi', 'Citroën'];
+            const cars = {
+                'Ford': ['Ford Fiesta R5'],
+                'Volkswagen': ['Volkswagen Polo GTI R5'],
+                'Škoda': ['Škoda Fabia R5'],
+                'Peugeot': ['Peugeot 208 T16 R5'],
+                'Mitsubishi': ['Mitsubishi Space Star R5'],
+                'Citroën': ['Citroën C3 R5']
+            };
+            
+            // Stwórz modal
+            const modalHtml = `
+                <div id="edit-driver-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div class="bg-[#0E0E0E] border border-[#222] rounded-xl w-full max-w-md p-6">
+                        <h3 class="font-mono text-xl font-bold mb-4 text-white">EDYTUJ KIEROWCĘ: ${driver.name}</h3>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-mono text-gray-400 mb-2">ZESPÓŁ</label>
+                                <select id="modal-driver-team" class="input-dark w-full">
+                                    ${teams.map(team => 
+                                        `<option value="${team}" ${driver.team === team ? 'selected' : ''}>${team}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-mono text-gray-400 mb-2">SAMOCHÓD</label>
+                                <select id="modal-driver-car" class="input-dark w-full">
+                                    ${cars[driver.team] ? cars[driver.team].map(car => 
+                                        `<option value="${car}" ${driver.car === car ? 'selected' : ''}>${car}</option>`
+                                    ).join('') : ''}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end gap-3">
+                            <button onclick="closeEditModal()" class="text-sm font-mono text-gray-400 px-4 py-2 hover:text-white rounded border border-gray-700">ANULUJ</button>
+                            <button onclick="saveDriverTeamAndCar(${id})" class="btn-accent text-sm">ZAPISZ ZMIANY</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Usuń istniejący modal jeśli jest
+            const existingModal = document.getElementById('edit-driver-modal');
+            if (existingModal) existingModal.remove();
+            
+            // Dodaj nowy modal
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Dodaj obsługę zmiany zespołu
+            document.getElementById('modal-driver-team').addEventListener('change', function() {
+                const team = this.value;
+                const carSelect = document.getElementById('modal-driver-car');
+                
+                if (cars[team]) {
+                    carSelect.innerHTML = cars[team].map(car => 
+                        `<option value="${car}" ${car === driver.car ? 'selected' : ''}>${car}</option>`
+                    ).join('');
+                }
+            });
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('edit-driver-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function saveDriverTeamAndCar(id) {
+            const driver = state.drivers.find(d => d.id === id);
+            if (!driver) return;
+            
+            const teamSelect = document.getElementById('modal-driver-team');
+            const carSelect = document.getElementById('modal-driver-car');
+            
+            if (teamSelect && carSelect) {
+                const oldTeam = driver.team;
+                const oldCar = driver.car;
+                
+                driver.team = teamSelect.value;
+                driver.car = carSelect.value;
+                
+                showAdminStatus("Dane kierowcy zaktualizowane");
+                renderAdminDrivers();
+                refreshAllViews();
+                updateTeamAssignments();
+                saveToLocalStorage();
+                closeEditModal();
+                
+                addLog(`Zmieniono zespół/samochód kierowcy ${driver.name}: ${oldTeam} (${oldCar}) → ${driver.team} (${driver.car})`, "system");
+            }
+        }
+
+        function initAdminStages() {
+            const rSelect = document.getElementById('admin-stage-round');
+            const sSelect = document.getElementById('admin-stage-select');
+            const dSelect = document.getElementById('stage-driver-select');
+            
+            const currR = rSelect.value;
+            const currS = sSelect.value;
+
+            rSelect.innerHTML = '<option value="">Wybierz rajd...</option>';
+            state.rounds.forEach((r, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = r.name.toUpperCase();
+                rSelect.add(opt);
+            });
+            
+            if(currR !== "" && state.rounds[currR]) {
+                rSelect.value = currR;
+            }
+
+            const updateStages = () => {
+                 sSelect.innerHTML = '<option value="">Wybierz odcinek...</option>';
+                 const rIdx = rSelect.value;
+                 if(rIdx !== "" && state.rounds[rIdx]) {
+                     state.rounds[rIdx].stages.forEach((s, i) => {
+                        const opt = document.createElement('option');
+                        opt.value = i;
+                        opt.text = s.toUpperCase();
+                        sSelect.add(opt);
+                     });
+                 }
+                 renderAdminResultsTable(); 
+            };
+
+            rSelect.onchange = updateStages;
+            sSelect.onchange = renderAdminResultsTable;
+            
+            updateStages();
+            if(currS !== "" && currS !== undefined) sSelect.value = currS;
+            renderAdminResultsTable();
+
+            dSelect.innerHTML = '<option value="">Wybierz kierowcę...</option>';
+            state.drivers.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name;
+                dSelect.appendChild(opt);
+            });
+        }
+        
+        function renderAdminResultsTable() {
+            const tbody = document.getElementById('admin-stage-results-body');
+            const rIdx = parseInt(document.getElementById('admin-stage-round').value);
+            const sIdx = parseInt(document.getElementById('admin-stage-select').value);
+            
+            if (isNaN(rIdx) || isNaN(sIdx)) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-600 text-sm">Wybierz rajd i odcinek</td></tr>'; 
+                document.getElementById('admin-table-info').textContent = "BRAK WYBORU";
+                return;
+            }
+
+            document.getElementById('admin-table-info').textContent = `${state.rounds[rIdx].name.toUpperCase()} // ${state.rounds[rIdx].stages[sIdx].toUpperCase()}`;
+
+            tbody.innerHTML = '';
+            const filtered = state.results.filter(res => res.r === rIdx && res.s === sIdx);
+            
+            // Sortowanie: normalne czasy, potem DNF, potem DSQ
+            filtered.sort((a,b) => {
+                if (a.time === "DSQ") return 1;
+                if (b.time === "DSQ") return -1;
+                if (a.time === "DNF") return 1;
+                if (b.time === "DNF") return -1;
+                return a.ms - b.ms;
+            });
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-600 text-sm">BRAK WYNIKÓW DLA TEGO ODCINKA</td></tr>';
+                return;
+            }
+
+            filtered.forEach(res => {
+                const driver = state.drivers.find(d => d.id === res.d);
+                if (!driver) return;
+                
+                const isDSQ = res.time === "DSQ";
+                const isDNF = res.time === "DNF";
+                const timeDisplay = formatTimeForDisplay(res.time === "DSQ" ? "DSQ" : (res.time === "DNF" ? "DNF" : res.ms));
+                const bonusPoints = (isDSQ || isDNF) ? '0' : `+${res.cp}`;
+                
+                const tr = document.createElement('tr');
+                if (isDSQ) {
+                    tr.className = "status-dsq";
+                } else if (isDNF) {
+                    tr.className = "status-dnf";
+                }
+                
+                tr.innerHTML = `
+                    <td class="p-3 text-gray-300 font-bold ${isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : '')}">${driver.name}</td>
+                    <td class="p-3 text-right font-mono ${isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-gray-400')}">${timeDisplay}</td>
+                    <td class="p-3 text-right font-mono text-sm ${isDSQ ? 'status-dsq-text' : (isDNF ? 'status-dnf-text' : 'text-gray-500')}">${bonusPoints}</td>
+                    <td class="p-3 text-right space-x-2">
+                         <button onclick="editResult(${res.r}, ${res.s}, ${res.d})" class="text-[#8B0000] hover:text-white text-sm uppercase font-mono">Edytuj</button>
+                         <button onclick="deleteResult(${res.r}, ${res.s}, ${res.d})" class="text-red-500 hover:text-red-300">×</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function editResult(r, s, d) {
+            const res = state.results.find(x => x.r === r && x.s === s && x.d === d);
+            if(!res) return;
+            
+            document.getElementById('stage-driver-select').value = res.d;
+            document.getElementById('admin-stage-time').value = res.time;
+            
+            const radios = document.getElementsByName('run_condition');
+            radios.forEach(radio => {
+                if(parseInt(radio.value) === res.cp) radio.checked = true;
+            });
+            
+            document.getElementById('admin-stage-time').focus();
+        }
+
+        function showAdminStatus(message, isError = false) {
+            const successEl = document.getElementById('admin-status-msg');
+            const errorEl = document.getElementById('admin-error-msg');
+            
+            if (isError) {
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+                errorEl.classList.add('block');
+                successEl.classList.add('hidden');
+                
+                setTimeout(() => {
+                    errorEl.classList.add('hidden');
+                    errorEl.classList.remove('block');
+                }, 3000);
+            } else {
+                successEl.textContent = message;
+                successEl.classList.remove('hidden');
+                successEl.classList.add('block');
+                errorEl.classList.add('hidden');
+                
+                setTimeout(() => {
+                    successEl.classList.add('hidden');
+                    successEl.classList.remove('block');
+                }, 2000);
+            }
+        }
+
+        function submitAdminResult() {
+            const rSelect = document.getElementById('admin-stage-round');
+            const sSelect = document.getElementById('admin-stage-select');
+            const rIdx = parseInt(rSelect.value);
+            const sIdx = parseInt(sSelect.value);
+            const dId = parseInt(document.getElementById('stage-driver-select').value);
+            const timeStr = document.getElementById('admin-stage-time').value.trim().toUpperCase(); 
+            
+            if (isNaN(rIdx) || isNaN(sIdx)) {
+                showAdminStatus("Wybierz rajd i odcinek", true);
+                return;
+            }
+            
+            if (!dId) {
+                showAdminStatus("Wybierz kierowcę", true);
+                return;
+            }
+            
+            if (!timeStr) {
+                showAdminStatus("Wprowadź czas lub DSQ/DNF", true);
+                return;
+            }
+            
+            // Sprawdź czy to DSQ lub DNF
+            let msValue;
+            if (timeStr === "DSQ" || timeStr === "DNF") {
+                msValue = timeStr;
+            } else {
+                // Sprawdź format czasu
+                if (!timeStr.includes(':') || !timeStr.includes('.')) {
+                    showAdminStatus("Wprowadź poprawny czas (MM:SS.ms) lub DSQ/DNF", true);
+                    return;
+                }
+                
+                try {
+                    msValue = parseTime(timeStr);
+                } catch(e) {
+                    showAdminStatus("Błąd formatu czasu. Użyj MM:SS.ms lub DSQ/DNF", true);
+                    return;
+                }
+            }
+            
+            const radios = document.getElementsByName('run_condition');
+            let conditionPoints = 0;
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    conditionPoints = parseInt(radios[i].value);
+                    break;
+                }
+            }
+            
+            // DSQ i DNF nie dostają punktów bonusowych
+            if (timeStr === "DSQ" || timeStr === "DNF") {
+                conditionPoints = 0;
+            }
+
+            // Usuń istniejący wynik dla tego kierowcy na tym odcinku
+            state.results = state.results.filter(res => !(res.r === rIdx && res.s === sIdx && res.d === dId));
+            
+            // Dodaj nowy wynik
+            state.results.push({
+                r: rIdx,
+                s: sIdx,
+                d: dId,
+                time: timeStr,
+                ms: msValue,
+                cp: conditionPoints
+            });
+            
+            document.getElementById('admin-stage-time').value = '';
+            document.getElementById('stage-driver-select').value = '';
+            
+            renderAdminResultsTable();
+            showAdminStatus("Zapisano poprawnie");
+            refreshAllViews();
+            saveToLocalStorage();
+            
+            const driver = state.drivers.find(d => d.id === dId);
+            const roundName = state.rounds[rIdx]?.name || `Rajd ${rIdx+1}`;
+            const stageName = state.rounds[rIdx]?.stages[sIdx] || `OS ${sIdx+1}`;
+            addLog(`Dodano wynik: ${driver?.name || 'Nieznany'} - ${roundName} - ${stageName}: ${timeStr}`, "system");
+        }
+        
+        function deleteResult(r, s, d) {
+            if(confirm("Usunąć ten wynik?")) {
+                state.results = state.results.filter(res => !(res.r === r && res.s === s && res.d === d));
+                renderAdminResultsTable();
+                refreshAllViews();
+                saveToLocalStorage();
+                showAdminStatus("Wynik usunięty");
+                
+                const driver = state.drivers.find(drv => drv.id === d);
+                const roundName = state.rounds[r]?.name || `Rajd ${r+1}`;
+                const stageName = state.rounds[r]?.stages[s] || `OS ${s+1}`;
+                addLog(`Usunięto wynik: ${driver?.name || 'Nieznany'} - ${roundName} - ${stageName}`, "system");
+            }
+        }
+
+        function addRally() {
+            const nameInput = document.getElementById('new-rally-name');
+            const name = nameInput.value.trim();
+            
+            if(name) {
+                state.rounds.push({
+                    id: state.rounds.length + 1,
+                    name: name,
+                    stages: []
+                });
+                nameInput.value = '';
+                initAdminStages(); 
+                document.getElementById('admin-stage-round').value = state.rounds.length - 1;
+                document.getElementById('admin-stage-round').dispatchEvent(new Event('change'));
+                showAdminStatus("Rajd dodany");
+                refreshAllViews();
+                saveToLocalStorage();
+                addLog(`Dodano rajd: ${name}`, "system");
+            } else {
+                showAdminStatus("Wprowadź nazwę rajdu", true);
+            }
+        }
+
+        function addStage() {
+            const nameInput = document.getElementById('new-stage-name');
+            const name = nameInput.value.trim();
+            const rIdx = parseInt(document.getElementById('admin-stage-round').value);
+            
+            if(name && !isNaN(rIdx)) {
+                state.rounds[rIdx].stages.push(name);
+                nameInput.value = '';
+                initAdminStages();
+                document.getElementById('admin-stage-round').value = rIdx;
+                const event = new Event('change');
+                document.getElementById('admin-stage-round').dispatchEvent(event);
+                document.getElementById('admin-stage-select').value = state.rounds[rIdx].stages.length - 1;
+                renderAdminResultsTable();
+                showAdminStatus("Odcinek dodany");
+                refreshAllViews();
+                saveToLocalStorage();
+                addLog(`Dodano odcinek: ${name} do ${state.rounds[rIdx].name}`, "system");
+            } else {
+                showAdminStatus("Wybierz rajd i wprowadź nazwę odcinka", true);
+            }
+        }
+
+        function renderScoringPreview() {
+            const tbody = document.getElementById('admin-scoring-preview');
+            tbody.innerHTML = '';
+            
+            const driverStats = calculateDriverStats();
+            driverStats.sort((a,b) => b.total - a.total);
+            
+            const driversToShow = driverStats.slice(0, 5);
+            
+            if (driversToShow.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-gray-500 text-sm">BRAK DANYCH</td></tr>`;
+                return;
+            }
+            
+            driversToShow.forEach((d, i) => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-[#222] hover:bg-[#1a1a1a]";
+                tr.innerHTML = `
+                    <td class="py-2 text-gray-500">${i+1}</td>
+                    <td class="py-2 text-gray-300 font-mono">${d.name}</td>
+                    <td class="py-2 text-right font-bold text-[#8B0000]">${d.total}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportData() {
+            const exportData = {
+                rounds: state.rounds,
+                drivers: state.drivers,
+                results: state.results,
+                changeLogs: state.changeLogs,
+                exportDate: new Date().toISOString(),
+                version: CLOUD_CONFIG.DATA_VERSION
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `wrc_winter_cup_data_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showAdminStatus("Dane wyeksportowane");
+            addLog("Wyeksportowano wszystkie dane", "system");
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        
+                        if (!importedData.rounds || !importedData.drivers || !importedData.results) {
+                            throw new Error("Nieprawidłowy format pliku");
+                        }
+                        
+                        if (confirm("Czy na pewno chcesz zaimportować dane? Obecne dane zostaną nadpisane.")) {
+                            state.rounds = importedData.rounds;
+                            state.drivers = importedData.drivers;
+                            state.results = importedData.results;
+                            state.changeLogs = importedData.changeLogs || [];
+                            
+                            // Upewnij się, że każdy kierowca ma equalizationPoints
+                            state.drivers.forEach(driver => {
+                                if (driver.equalizationPoints === undefined) {
+                                    driver.equalizationPoints = 0;
+                                }
+                            });
+                            
+                            saveToLocalStorage();
+                            refreshAllViews();
+                            showAdminStatus("Dane zaimportowane pomyślnie");
+                            addLog("Zaimportowano dane z pliku", "system");
+                        }
+                    } catch (error) {
+                        showAdminStatus("Błąd podczas importu danych: " + error.message, true);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function editDriverPoints(id) {
+            const driver = state.drivers.find(d => d.id === id);
+            if (!driver) return;
+            
+            const currentPoints = driver.points.join(', ');
+            const newPoints = prompt(`Edytuj punkty kierowcy ${driver.name} (wprowadź ${state.rounds.length} wartości oddzielonych przecinkami):`, currentPoints);
+            
+            if (newPoints !== null) {
+                try {
+                    const pointsArray = newPoints.split(',').map(p => parseInt(p.trim()) || 0);
+                    if (pointsArray.length !== state.rounds.length) {
+                        throw new Error(`Musisz podać ${state.rounds.length} wartości (dla ${state.rounds.length} rund)`);
+                    }
+                    
+                    driver.points = pointsArray;
+                    showAdminStatus("Punkty zaktualizowane");
+                    refreshAllViews();
+                    saveToLocalStorage();
+                    addLog(`Edytowano punkty kierowcy: ${driver.name}`, "system");
+                } catch(e) {
+                    showAdminStatus(e.message, true);
+                }
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (username === "admin" && password === "prc2025") {
+                state.isLoggedIn = true;
+                errorEl.classList.add('hidden');
+                router('admin');
+                renderAdminDrivers();
+                initAdminStages();
+                renderScoringPreview();
+                refreshDashboard();
+                initTableModule();
+                addLog("Zalogowano do panelu admina", "system");
+            } else {
+                errorEl.textContent = "Nieprawidłowy login lub hasło.";
+                errorEl.classList.remove('hidden');
+                document.getElementById('login-password').value = '';
+            }
+        }
+
+        function logout() {
+            state.isLoggedIn = false;
+            router('home');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+            addLog("Wylogowano z panelu admina", "system");
+        }
+
+        function toggleDriverForm() {
+            const form = document.getElementById('driver-form');
+            form.classList.toggle('hidden');
+        }
+
+        function addDriver() {
+            const name = document.getElementById('new-driver-name').value.trim();
+            const team = document.getElementById('new-driver-team').value;
+            const car = document.getElementById('new-driver-car').value;
+
+            if(name && team && car) {
+                const newId = state.drivers.length > 0 ? Math.max(...state.drivers.map(d=>d.id)) + 1 : 1;
+                state.drivers.push({
+                    id: newId,
+                    name: name,
+                    team: team,
+                    car: car,
+                    points: new Array(state.rounds.length).fill(0),
+                    equalizationPoints: 0
+                });
+                
+                document.getElementById('new-driver-name').value = '';
+                document.getElementById('new-driver-team').value = '';
+                document.getElementById('new-driver-car').value = '';
+                toggleDriverForm();
+                
+                renderAdminDrivers();
+                refreshAllViews();
+                updateTeamAssignments();
+                saveToLocalStorage();
+                showAdminStatus("Kierowca dodany");
+                addLog(`Dodano kierowcę: ${name} (${team})`, "system");
+            } else {
+                showAdminStatus("Wypełnij wszystkie pola", true);
+            }
+        }
+
+        function deleteDriver(id) {
+            const driver = state.drivers.find(d => d.id === id);
+            if (!driver) return;
+            
+            if(confirm(`Czy na pewno usunąć kierowcę ${driver.name}? Wszystkie jego wyniki również zostaną usunięte.`)) {
+                state.drivers = state.drivers.filter(d => d.id !== id);
+                state.results = state.results.filter(r => r.d !== id);
+                
+                renderAdminDrivers();
+                refreshAllViews();
+                updateTeamAssignments();
+                saveToLocalStorage();
+                showAdminStatus("Kierowca usunięty");
+                addLog(`Usunięto kierowcę: ${driver.name}`, "system");
+            }
+        }
+
+        // --- INIT ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Pokaż początkowy status
+            updateCloudStatus('syncing', 'ŁADOWANIE...');
+            
+            // Wczytaj dane z chmury (lub localStorage)
+            await loadFromCloud();
+            
+            // Oblicz punkty
+            calculateAllRoundPoints();
+            
+            // Renderuj widoki
+            renderDriversTable();
+            renderConstructorsTable();
+            updateLeaders();
+            updateTeamAssignments();
+            router('home');
+            
+            // Uruchom rotację liderów
+            startLeaderRotation();
+            
+            // Sprawdź status chmury co 30 sekund
+            setInterval(async () => {
+                if (state.pendingChanges) {
+                    await saveToCloud();
+                }
+            }, 30000);
+        });
+
+    </script>
+</body>
+</html>
