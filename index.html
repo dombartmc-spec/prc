@@ -1784,7 +1784,7 @@
                     diffClass = 'text-red-500';
                 } else if (res.type === 'dnf') {
                     const formattedTime = formatTimeForDisplay(res.displayTime);
-                    timeDisplay = `${formattedTime}<span class="text-yellow-500" text-100>(DNF)</span>`;
+                    timeDisplay = `${formattedTime}<span class="text-yellow-500" text-xs ml-1>(DNF)</span>`;
                     
                     if (i === 0) {
                         diff = '-';
@@ -2686,6 +2686,7 @@
     </script>
 </body>
 </html>
+
 
 
 
