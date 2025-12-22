@@ -1,0 +1,19 @@
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "TUJ_API_KEY",
+    authDomain: "twoj-projekt.firebaseapp.com",
+    projectId: "twoj-projekt",
+    storageBucket: "twoj-projekt.appspot.com",
+    messagingSenderId: "TUJ_SENDER_ID",
+    appId: "TUJ_APP_ID"
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Ustawienia Firestore
+db.settings({
+    timestampsInSnapshots: true
+});
