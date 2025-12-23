@@ -446,59 +446,6 @@
                 width: 100%;
             }
         }
-
-        /* Simple icon styling */
-        .icon {
-            display: inline-block;
-            color: white;
-            font-size: 1em;
-            line-height: 1;
-            margin-right: 4px;
-        }
-
-        .icon-warning::before {
-            content: "⚠";
-        }
-
-        .icon-error::before {
-            content: "✗";
-        }
-
-        .icon-success::before {
-            content: "✓";
-        }
-
-        .icon-info::before {
-            content: "ℹ";
-        }
-
-        .icon-calendar::before {
-            content: "📅";
-        }
-
-        .icon-flag::before {
-            content: "🏁";
-        }
-
-        .icon-team::before {
-            content: "👥";
-        }
-
-        .icon-safety::before {
-            content: "⚠";
-        }
-
-        .icon-car::before {
-            content: "🚗";
-        }
-
-        .icon-tool::before {
-            content: "🔧";
-        }
-
-        .icon-sync::before {
-            content: "🔄";
-        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative">
@@ -961,7 +908,7 @@
                 <div class="space-y-6">
                     <!-- General Rules -->
                     <div class="technical-border rounded-xl bg-[#0E0E0E] p-4 md:p-6">
-                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4"><span class="icon icon-calendar"></span> TERMINY I HARMONOGRAM</h3>
+                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4">📅 TERMINY I HARMONOGRAM</h3>
                         <ul class="space-y-3 font-mono text-sm text-gray-300">
                             <li class="flex items-start">
                                 <span class="text-[#8B0000] mr-2">•</span>
@@ -984,7 +931,7 @@
 
                     <!-- Scoring System -->
                     <div class="technical-border rounded-xl bg-[#0E0E0E] p-4 md:p-6">
-                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4"><span class="icon icon-flag"></span> PUNKTACJA</h3>
+                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4">🏁 PUNKTACJA</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left font-mono text-sm">
                                 <thead class="text-gray-400 border-b border-[#222]">
@@ -1007,7 +954,7 @@
                         </div>
                         
                         <div class="mt-4 p-3 bg-[#111] rounded-lg border-l-4 border-yellow-600">
-                            <h4 class="font-mono text-sm font-bold text-white mb-2"><span class="icon icon-tool"></span> Punkty za stan pojazdu:</h4>
+                            <h4 class="font-mono text-sm font-bold text-white mb-2">🔧 Punkty za stan pojazdu:</h4>
                             <ul class="font-mono text-xs text-gray-300 space-y-1">
                                 <li>• Brak uszkodzeń: <span class="text-green-500">+2 punkty</span></li>
                                 <li>• Lekkie uszkodzenia: <span class="text-yellow-500">+1 punkt</span></li>
@@ -1016,7 +963,7 @@
                         
                         <!-- New: Equalization Points -->
                         <div class="mt-4 p-3 bg-[#111] rounded-lg border-l-4 border-grey-600">
-                            <h4 class="font-mono text-sm font-bold text-white mb-2"><span class="icon icon-sync"></span> Punkty Wyrównawcze (+4 PKT):</h4>
+                            <h4 class="font-mono text-sm font-bold text-white mb-2">🔄 Punkty Wyrównawcze (+4 PKT):</h4>
                             <ul class="font-mono text-xs text-gray-300 space-y-1">
                                 <li>• <strong>Przy 6 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe</li>
                                 <li>• <strong>Przy 8 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe</li>
@@ -1031,7 +978,7 @@
                 <div class="space-y-6">
                     <!-- Team Rules -->
                     <div class="technical-border rounded-xl bg-[#0E0E0E] p-4 md:p-6">
-                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4"><span class="icon icon-team"></span> TEAMY I KONSTRUKTORZY</h3>
+                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4">👥 TEAMY I KONSTRUKTORZY</h3>
                         <ul class="space-y-3 font-mono text-sm text-gray-300">
                             <li class="flex items-start">
                                 <span class="text-[#8B0000] mr-2">•</span>
@@ -1058,18 +1005,18 @@
 
                     <!-- Safety Rules -->
                     <div class="technical-border rounded-xl bg-[#0E0E0E] p-4 md:p-6 border-l-4 border-red-600">
-                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4"><span class="icon icon-safety"></span> ZASADY BEZPIECZEŃSTWA I FAIR PLAY</h3>
+                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4">⚠️ ZASADY BEZPIECZEŃSTWA I FAIR PLAY</h3>
                         <ul class="space-y-3 font-mono text-sm text-gray-300">
                             <li class="flex items-start">
-                                <span class="text-red-500 mr-2"><span class="icon icon-error"></span></span>
+                                <span class="text-red-500 mr-2">❌</span>
                                 Zakaz wychodzenia z turnieju - opuszczenie = dyskwalifikacja
                             </li>
                             <li class="flex items-start">
-                                <span class="text-red-500 mr-2"><span class="icon icon-error"></span></span>
+                                <span class="text-red-500 mr-2">❌</span>
                                 Zakaz restartowania OS-ów (nawiet po wypadku)
                             </li>
                             <li class="flex items-start">
-                                <span class="text-red-500 mr-2"><span class="icon icon-error"></span></span>
+                                <span class="text-red-500 mr-2">❌</span>
                                 Świadome rozbijanie się surowo zabronione
                             </li>
                             <li class="flex items-start">
@@ -1081,7 +1028,7 @@
 
                     <!-- Car Rules -->
                     <div class="technical-border rounded-xl bg-[#0E0E0E] p-4 md:p-6">
-                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4"><span class="icon icon-car"></span> SAMOCHODY</h3>
+                        <h3 class="font-mono text-lg md:text-xl font-bold mb-4">🚗 SAMOCHODY</h3>
                         <ul class="space-y-3 font-mono text-sm text-gray-300">
                             <li class="flex items-start">
                                 <span class="text-[#8B0000] mr-2">•</span>
@@ -1231,7 +1178,7 @@
                                     </div>
                                     <div class="flex justify-between items-center">
                                         <span class="font-mono text-sm text-gray-400">Cloud Sync:</span>
-                                        <span class="font-mono text-xs" id="last-cloud-sync">  -</span>
+                                        <span class="font-mono text-xs" id="last-cloud-sync">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -2124,7 +2071,7 @@ Aktualny lider: ${reportData.leader}
                 
                 const icon = document.createElement('div');
                 icon.className = `mt-0.5 ${alert.type === 'error' ? 'text-red-500' : alert.type === 'warning' ? 'text-yellow-500' : 'text-green-500'}`;
-                icon.innerHTML = alert.type === 'error' ? '<span class="icon icon-error"></span>' : alert.type === 'warning' ? '<span class="icon icon-warning"></span>' : '<span class="icon icon-success"></span>';
+                icon.innerHTML = alert.type === 'error' ? '❌' : alert.type === 'warning' ? '⚠️' : '✅';
                 
                 const message = document.createElement('p');
                 message.className = "text-xs text-gray-300 font-mono flex-1";
@@ -2907,7 +2854,6 @@ Aktualny lider: ${reportData.leader}
             return setCached(cacheKey, driverTimes);
         }
 
-        // POPRAWIONA FUNKCJA: Teraz obsługuje kierowców z niepełnymi wynikami
         function calculateTotalTimeForDriverInRound(driverId, roundIndex) {
             let totalMs = 0;
             const roundResults = state.results.filter(res => res.r === roundIndex && res.d === driverId);
@@ -2921,7 +2867,7 @@ Aktualny lider: ${reportData.leader}
             // Zbierz wszystkie czasy które nie są DSQ
             const validResults = roundResults.filter(result => result.time !== "DSQ");
             
-            // Jeśli nie ma żadnych wyników, zwróć null (kierowca nie startował)
+            // Jeśli nie ma żadnych wyników, zwróć null
             if (validResults.length === 0) {
                 return null;
             }
@@ -2935,24 +2881,15 @@ Aktualny lider: ${reportData.leader}
                 }
             });
             
-            // Dla każdego odcinka, jeśli kierowca nie ma wyniku, traktujemy jako DNF
-            const roundStagesCount = state.rounds[roundIndex].stages.length;
-            
-            for (let stageIndex = 0; stageIndex < roundStagesCount; stageIndex++) {
-                const stageResult = validResults.find(res => res.s === stageIndex);
-                
-                if (stageResult) {
-                    if (stageResult.time === "DNF") {
-                        // DNF = najgorszy czas + 20 sekund
-                        totalMs += worstTimeInRound + 20000;
-                    } else if (typeof stageResult.ms === 'number') {
-                        totalMs += stageResult.ms;
-                    }
-                } else {
-                    // Brak wyniku dla tego odcinka = DNF
+            // Oblicz sumę czasów
+            validResults.forEach(result => {
+                if (result.time === "DNF") {
+                    // DNF = najgorszy czas + 20 sekund
                     totalMs += worstTimeInRound + 20000;
+                } else if (typeof result.ms === 'number') {
+                    totalMs += result.ms;
                 }
-            }
+            });
             
             return totalMs;
         }
@@ -3051,21 +2988,17 @@ Aktualny lider: ${reportData.leader}
                     const standings = getRoundStandings(roundIndex);
                     const pointsSystem = [15, 12, 10, 8, 6, 4, 2, 1];
                     
-                    // Licznik pozycji dla punktów
-                    let pointsPosition = 0;
-                    
+                    let position = 0;
                     for (let i = 0; i < standings.length; i++) {
                         const standing = standings[i];
                         const driver = state.drivers.find(d => d.id === standing.driverId);
                         
                         if (driver && standing.totalMs !== "DSQ") {
-                            // Jeśli kierowca ma czas (nie DSQ) i są jeszcze punkty do rozdania
-                            if (pointsPosition < pointsSystem.length) {
-                                driver.points[roundIndex] = pointsSystem[pointsPosition];
-                                pointsPosition++;
+                            if (position < pointsSystem.length) {
+                                driver.points[roundIndex] = pointsSystem[position];
+                                position++;
                             }
                         }
-                        // Kierowcy z DSQ dostają 0 punktów (już ustawione)
                     }
                 }
                 
@@ -3682,8 +3615,7 @@ Aktualny lider: ${reportData.leader}
                 for (let i = 0; i < state.rounds.length; i++) {
                     td = document.createElement('td');
                     td.className = `py-3 md:py-4 px-2 md:px-4 text-right ${isLeader ? 'text-gray-800' : 'text-gray-500'}`;
-                    const points = driver.points[i] || 0;
-                    td.textContent = points > 0 ? points : '-';
+                    td.textContent = driver.points[i] || '-';
                     tr.appendChild(td);
                 }
                 
