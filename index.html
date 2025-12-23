@@ -967,6 +967,7 @@
                             <ul class="font-mono text-xs text-gray-300 space-y-1">
                                 <li>• <strong>Przy 6 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe</li>
                                 <li>• <strong>Przy 8 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe</li>
+                                <li>• <strong>Przy 10 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 7. i w 3. etapie miejsce 5. lub wyższe</li>
                                 <li>• Punkty dodawane po podliczeniu punktów za etapy</li>
                             </ul>
                         </div>
@@ -2293,13 +2294,16 @@ Aktualny lider: ${reportData.leader}
                     const [pos1, pos2] = positions;
                     const avgPosition = (pos1 + pos2) / 2;
                     
-                    // Symulacja dla 6 i 8 graczy
+                    // Symulacja dla 6, 8 i 10 graczy
                     if (avgPosition > 5 && thirdPosition <= 3) {
                         equalizationPoints = 4;
                         equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>5) i 3. etap: ${thirdPosition} (≤3) = +4 PKT`;
                     } else if (avgPosition > 6 && thirdPosition <= 4) {
                         equalizationPoints = 4;
                         equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>6) i 3. etap: ${thirdPosition} (≤4) = +4 PKT`;
+                    } else if (avgPosition > 7 && thirdPosition <= 5) {
+                        equalizationPoints = 4;
+                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>7) i 3. etap: ${thirdPosition} (≤5) = +4 PKT`;
                     } else {
                         equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)}, 3. etap: ${thirdPosition} = 0 PKT wyrównawczych`;
                     }
@@ -2965,6 +2969,10 @@ Aktualny lider: ${reportData.leader}
                     }
                 } else if (totalDrivers === 8) {
                     if (positionInFirstTwo > 6 && positionInThird <= 4) {
+                        driver.equalizationPoints = 4;
+                    }
+                } else if (totalDrivers === 10) {
+                    if (positionInFirstTwo > 6 && positionInThird <= 5) {
                         driver.equalizationPoints = 4;
                     }
                 }
