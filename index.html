@@ -585,7 +585,7 @@
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 border-b border-[#222] pb-4">
                 <div class="mb-4 md:mb-0">
                     <h2 class="text-2xl md:text-3xl font-mono font-bold">KLASYFIKACJA GENERALNA</h2>
-                    <p class="text-sm text-gray-400 font-mono mt-1">WRC WINTER RALLY CUP 2025</p>
+                    <p class="text-sm text-gray-400 font-mono mt-1">POTATO RALLY CHAMPIONSHIP</p>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-[#111] p-1 border border-[#222] rounded-lg">
                     <button onclick="switchTab('drivers')" id="btn-drivers" class="text-sm font-mono px-4 py-2 bg-white text-black transition-all rounded-md btn-full-mobile">KIEROWCY</button>
@@ -900,7 +900,7 @@
         <section id="view-rules" class="hidden fade-in max-w-7xl mx-auto px-4 py-8 md:py-12 container-padding">
             <div class="mb-6 md:mb-8">
                 <h2 class="text-2xl md:text-3xl font-mono font-bold">ZASADY TURNIEJU</h2>
-                <p class="text-sm text-gray-400 font-mono mt-1">WRC WINTER RALLY CUP 2025</p>
+                <p class="text-sm text-gray-400 font-mono mt-1">POTATO RALLY CHAMPIONSHIP</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
@@ -1576,7 +1576,7 @@
 
     <footer class="mt-8 md:mt-12 border-t border-[#222] py-6 md:py-8 bg-[#050505] relative z-10">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">WRC WINTER RALLY CUP 2025 // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
+            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">POTATO RALLY CHAMPIONSHIP // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
         </div>
     </footer>
 
@@ -1707,7 +1707,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': CLOUD_CONFIG.API_KEY,
-                        'X-Bin-Name': 'WRC Winter Rally Cup 2025 Data'
+                        'X-Bin-Name': 'POTATO RALLY CHAMPIONSHIP Data'
                     },
                     body: JSON.stringify(dataToSave)
                 });
@@ -1927,7 +1927,7 @@
             };
             
             const reportText = `
-RAPORT TURNIEJU WRC WINTER RALLY CUP 2025
+RAPORT TURNIEJU POTATO RALLY CHAMPIONSHIP
 =========================================
 Wygenerowano: ${reportData.generated}
 
@@ -4433,4 +4433,5 @@ Aktualny lider: ${reportData.leader}
     </script>
 </body>
 </html>
+
 
