@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRC 2025</title>
+    <title>Potato Rally Championship</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -585,7 +585,7 @@
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 border-b border-[#222] pb-4">
                 <div class="mb-4 md:mb-0">
                     <h2 class="text-2xl md:text-3xl font-mono font-bold">KLASYFIKACJA GENERALNA</h2>
-                    <p class="text-sm text-gray-400 font-mono mt-1">WRC WINTER RALLY CUP 2025</p>
+                    <p class="text-sm text-gray-400 font-mono mt-1">POTATO RALLY CHAMPIONSHIP</p>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-[#111] p-1 border border-[#222] rounded-lg">
                     <button onclick="switchTab('drivers')" id="btn-drivers" class="text-sm font-mono px-4 py-2 bg-white text-black transition-all rounded-md btn-full-mobile">KIEROWCY</button>
@@ -630,7 +630,7 @@
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-6 md:mb-8 gap-4 md:gap-6 border-b border-[#222] pb-4 md:pb-6">
                 <div class="mb-4 md:mb-0">
                     <h2 class="text-2xl md:text-3xl font-mono font-bold">WYNIKI SZCZEGÓŁOWE</h2>
-                    <p class="text-sm text-gray-400 font-mono mt-1">ANALIZA CZASÓW ODCINKÓW SPECJALNYOS</p>
+                    <p class="text-sm text-gray-400 font-mono mt-1">ANALIZA CZASÓW ODCINKÓW SPECJALNYCH</p>
                 </div>
                 
                 <!-- Controls -->
@@ -900,7 +900,7 @@
         <section id="view-rules" class="hidden fade-in max-w-7xl mx-auto px-4 py-8 md:py-12 container-padding">
             <div class="mb-6 md:mb-8">
                 <h2 class="text-2xl md:text-3xl font-mono font-bold">ZASADY TURNIEJU</h2>
-                <p class="text-sm text-gray-400 font-mono mt-1">WRC WINTER RALLY CUP 2025</p>
+                <p class="text-sm text-gray-400 font-mono mt-1">POTATO RALLY CHAMPIONSHIP</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
@@ -920,7 +920,7 @@
                             </li>
                             <li class="flex items-start">
                                 <span class="text-[#8B0000] mr-2">•</span>
-                                Każdy kraj: <span class="text-[#8B0000]">3 odcinki specjalne</span>
+                                Każdy kraj: <span class="text-[#8B0000]"> 3 odcinki specjalne</span>
                             </li>
                             <li class="flex items-start">
                                 <span class="text-[#8B0000] mr-2">•</span>
@@ -965,11 +965,10 @@
                         <div class="mt-4 p-3 bg-[#111] rounded-lg border-l-4 border-grey-600">
                             <h4 class="font-mono text-sm font-bold text-white mb-2">🔄 Punkty Wyrównawcze (+4 PKT):</h4>
                             <ul class="font-mono text-xs text-gray-300 space-y-1">
-                                <li>• <strong>Przy 6 uczestnikach w etapie:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe</li>
-                                <li>• <strong>Przy 8 uczestnikach w etapie:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe</li>
-                                <li>• <strong>Przy 10 uczestnikach w etapie:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 7. i w 3. etapie miejsce 5. lub wyższe</li>
+                                <li>• <strong>Przy 6 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe</li>
+                                <li>• <strong>Przy 8 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe</li>
+                                <li>• <strong>Przy 10 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 7. i w 3. etapie miejsce 5. lub wyższe</li>
                                 <li>• Punkty dodawane po podliczeniu punktów za etapy</li>
-                                <li>• Uwaga: Liczy się liczba kierowców <strong>faktycznie startujących</strong> w danym etapie, a nie zarejestrowanych</li>
                             </ul>
                         </div>
                     </div>
@@ -1018,7 +1017,7 @@
                             </li>
                             <li class="flex items-start">
                                 <span class="text-red-500 mr-2">❌</span>
-                                Świadome rozbijanie się surowo zabronione
+                                Używanie jakichkolwiek wspomagaczy z poza opcji gry jest surowo zabronione
                             </li>
                             <li class="flex items-start">
                                 <span class="text-red-500 mr-2">•</span>
@@ -1161,14 +1160,6 @@
                             <div class="technical-border bg-[#0E0E0E] p-4 md:p-5 rounded-xl">
                                 <h4 class="font-mono text-base font-bold mb-4 text-gray-300 border-b border-[#222] pb-2">PODSUMOWANIE TURNIEJU</h4>
                                 <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-mono text-sm text-gray-400">Status turnieju:</span>
-                                        <span class="font-mono text-sm font-bold text-green-500" id="tournament-status">AKTYWNY</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-mono text-sm text-gray-400">Progres:</span>
-                                        <span class="font-mono text-sm" id="tournament-progress">0%</span>
-                                    </div>
                                     <div class="flex justify-between items-center">
                                         <span class="font-mono text-sm text-gray-400">Lider:</span>
                                         <span class="font-mono text-sm font-bold" id="tournament-leader">-</span>
@@ -1545,8 +1536,7 @@
                             1. Miejsca w rajdzie: 15-12-10-8-6-4-2-1<br>
                             2. Punkty za stan pojazdu: Czysty (+2), Lekkie uszk. (+1)<br>
                             3. Punkty wyrównawcze: +4 po 3 etapach w określonych warunkach<br>
-                            4. DSQ - dyskwalifikacja z całego kraju, DNF - +20s do najgorszego czasu<br>
-                            <strong>UWAGA:</strong> Punkty wyrównawcze liczone są na podstawie liczby <strong>faktycznie startujących</strong> w każdym etapie!
+                            4. DSQ - dyskwalifikacja z całego kraju, DNF - +20s do najgorszego czasu
                         </div>
                         <div class="technical-border bg-[#0F0F0F] p-4 md:p-6 rounded-xl">
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-2">
@@ -1586,7 +1576,7 @@
 
     <footer class="mt-8 md:mt-12 border-t border-[#222] py-6 md:py-8 bg-[#050505] relative z-10">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">WRC WINTER RALLY CUP 2025 // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
+            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">POTATO RALLY CHAMPIONSHIP // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
         </div>
     </footer>
 
@@ -1717,7 +1707,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': CLOUD_CONFIG.API_KEY,
-                        'X-Bin-Name': 'WRC Winter Rally Cup 2025 Data'
+                        'X-Bin-Name': 'POTATO RALLY CHAMPIONSHIP Data'
                     },
                     body: JSON.stringify(dataToSave)
                 });
@@ -1937,7 +1927,7 @@
             };
             
             const reportText = `
-RAPORT TURNIEJU WRC WINTER RALLY CUP 2025
+RAPORT TURNIEJU POTATO RALLY CHAMPIONSHIP
 =========================================
 Wygenerowano: ${reportData.generated}
 
@@ -2111,17 +2101,7 @@ Aktualny lider: ${reportData.leader}
             
             document.getElementById('tournament-leader').textContent = driverLeader.name || "-";
             
-            // Oblicz progres
-            const totalStages = state.rounds.reduce((sum, round) => sum + round.stages.length, 0);
-            const stagesWithResults = [...new Set(state.results.map(r => `${r.r}-${r.s}`))].length;
-            const progress = totalStages > 0 ? Math.round((stagesWithResults / totalStages) * 100) : 0;
-            
-            document.getElementById('tournament-progress').textContent = `${progress}%`;
-            document.getElementById('tournament-progress').className = `font-mono text-sm ${progress === 100 ? 'text-green-500' : progress > 50 ? 'text-yellow-500' : 'text-red-500'}`;
-            
-            document.getElementById('tournament-status').textContent = progress === 100 ? 'ZAKOŃCZONY' : 'AKTYWNY';
-            document.getElementById('tournament-status').className = `font-mono text-sm font-bold ${progress === 100 ? 'text-green-500' : 'text-yellow-500'}`;
-            
+            // Aktualizuj timestamp
             document.getElementById('last-update').textContent = new Date().toLocaleString('pl-PL', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -2896,7 +2876,7 @@ Aktualny lider: ${reportData.leader}
             return totalMs;
         }
 
-        // --- POPRAWIONA FUNKCJA PUNKTÓW WYRÓWNAWCZYCH (wg faktycznie startujących) ---
+        // --- POPRAWIONE FUNKCJE PUNKTACJI ---
         function calculateEqualizationPoints() {
             if (state.isCalculating) return;
             
@@ -2905,49 +2885,23 @@ Aktualny lider: ${reportData.leader}
                 driver.equalizationPoints = 0;
             });
             
+            const totalDrivers = state.drivers.length;
+            
             // Sprawdzamy tylko jeśli mamy przynajmniej 3 rundy
             if (state.rounds.length < 3) {
                 return;
             }
             
-            // Obliczamy liczbę faktycznie startujących w każdej z pierwszych 3 rund
-            const activeDriversInRounds = [];
-            for (let i = 0; i < 3; i++) {
-                // Liczba kierowców z wynikami w tej rundzie (bez DSQ - bo DSQ to dyskwalifikacja z całego kraju)
-                const driversWithResults = [...new Set(state.results
-                    .filter(res => res.r === i && res.time !== "DSQ")
-                    .map(res => res.d))];
-                activeDriversInRounds.push(driversWithResults.length);
-            }
-            
-            // Jeśli w którejś z pierwszych 3 rund nie ma wystarczająco danych, przerwij
-            if (activeDriversInRounds.some(count => count === 0)) {
-                return;
-            }
-            
-            // Dla uproszczenia przyjmujemy średnią z 3 pierwszych rund jako liczbę uczestników
-            const avgActiveDrivers = Math.round(activeDriversInRounds.reduce((a, b) => a + b, 0) / 3);
-            
-            console.log(`Liczba faktycznie startujących w pierwszych 3 etapach: ${avgActiveDrivers} (R1: ${activeDriversInRounds[0]}, R2: ${activeDriversInRounds[1]}, R3: ${activeDriversInRounds[2]})`);
-            
             // Obliczamy pozycje w pierwszych 2 rundach
             const firstTwoRoundsStandings = [];
             
-            // Zbieramy tylko kierowców, którzy startowali w pierwszej lub drugiej rundzie
-            const driversInFirstTwoRounds = [...new Set(state.results
-                .filter(res => (res.r === 0 || res.r === 1) && res.time !== "DSQ")
-                .map(res => res.d))];
-            
-            driversInFirstTwoRounds.forEach(driverId => {
+            state.drivers.forEach(driver => {
                 // Suma punktów z pierwszych 2 rund
-                const driver = state.drivers.find(d => d.id === driverId);
-                if (driver) {
-                    const firstTwoRoundsPoints = (driver.points[0] || 0) + (driver.points[1] || 0);
-                    firstTwoRoundsStandings.push({
-                        driverId: driverId,
-                        points: firstTwoRoundsPoints
-                    });
-                }
+                const firstTwoRoundsPoints = (driver.points[0] || 0) + (driver.points[1] || 0);
+                firstTwoRoundsStandings.push({
+                    driverId: driver.id,
+                    points: firstTwoRoundsPoints
+                });
             });
             
             // Sortujemy malejąco według punktów
@@ -2965,10 +2919,7 @@ Aktualny lider: ${reportData.leader}
             // Przypisujemy pozycje w 3. rundzie
             const thirdRoundPositions = {};
             thirdRoundStandings.forEach((standing, index) => {
-                // DSQ nie dostaje pozycji (jest poza konkursem)
-                if (standing.totalMs !== "DSQ") {
-                    thirdRoundPositions[standing.driverId] = index + 1;
-                }
+                thirdRoundPositions[standing.driverId] = index + 1;
             });
             
             // Sprawdzamy warunki dla każdego kierowcy
@@ -2980,34 +2931,18 @@ Aktualny lider: ${reportData.leader}
                     return;
                 }
                 
-                // Warunki na podstawie ŚREDNIEJ liczby faktycznie startujących w 3 pierwszych etapach
-                if (avgActiveDrivers === 6) {
+                if (totalDrivers === 6) {
                     if (positionInFirstTwo > 5 && positionInThird <= 3) {
                         driver.equalizationPoints = 4;
                     }
-                } else if (avgActiveDrivers === 7) {
-                    // Dla 7 graczy - między 6 a 8
-                    if (positionInFirstTwo > 5 && positionInThird <= 3) {
-                        driver.equalizationPoints = 4;
-                    }
-                } else if (avgActiveDrivers === 8) {
+                } else if (totalDrivers === 8) {
                     if (positionInFirstTwo > 6 && positionInThird <= 4) {
                         driver.equalizationPoints = 4;
                     }
-                } else if (avgActiveDrivers === 9) {
-                    // Dla 9 graczy - między 8 a 10
-                    if (positionInFirstTwo > 6 && positionInThird <= 4) {
+                } else if (totalDrivers >= 10) {
+                    if (positionInFirstTwo > 6 && positionInThird <= 5) {
                         driver.equalizationPoints = 4;
                     }
-                } else if (avgActiveDrivers >= 10) {
-                    if (positionInFirstTwo > 7 && positionInThird <= 5) {
-                        driver.equalizationPoints = 4;
-                    }
-                }
-                
-                // Logowanie dla debugowania
-                if (driver.equalizationPoints > 0) {
-                    console.log(`Kierowca ${driver.name} otrzymuje +4 PKT wyrównawcze: pozycje ${positionInFirstTwo} (1-2 etap) / ${positionInThird} (3 etap) dla ${avgActiveDrivers} uczestników`);
                 }
             });
         }
@@ -3049,7 +2984,7 @@ Aktualny lider: ${reportData.leader}
                     }
                 }
                 
-                // Oblicz punkty wyrównawcze (wg faktycznie startujących)
+                // Oblicz punkty wyrównawcze
                 calculateEqualizationPoints();
             } finally {
                 state.isCalculating = false;
@@ -3098,7 +3033,7 @@ Aktualny lider: ${reportData.leader}
             return setCached(CACHE_KEYS.DRIVER_STATS, result);
         }
 
-        // OPTIMIZATION: Cached constructor stats calculation
+        // OPTIMIZATION: Cached constructor stats calculation - POPRAWIONA
         function calculateConstructorStats() {
             const cached = getCached(CACHE_KEYS.CONSTRUCTOR_STATS);
             if (cached) return cached;
@@ -3122,7 +3057,7 @@ Aktualny lider: ${reportData.leader}
                 .map(([team, points]) => ({
                     team,
                     points,
-                    drivers: teamDrivers[team]
+                    drivers: teamDrivers[team] || []
                 }));
             
             return setCached(CACHE_KEYS.CONSTRUCTOR_STATS, result);
@@ -3145,9 +3080,68 @@ Aktualny lider: ${reportData.leader}
             if (cached) return cached;
             
             const constructorStats = calculateConstructorStats();
-            const result = constructorStats[0] || { team: "Brak danych", points: 0 };
+            const result = constructorStats[0] || { team: "Brak danych", points: 0, drivers: [] };
             
             return setCached(CACHE_KEYS.CONSTRUCTOR_LEADER, result);
+        }
+
+        // --- POPRAWIONA FUNKCJA renderConstructorsTable ---
+        function renderConstructorsTable() {
+            const tbody = document.getElementById('constructors-ranking-body');
+            tbody.innerHTML = '';
+            
+            const constructorStats = calculateConstructorStats();
+
+            constructorStats.forEach((constructor, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#111] transition-colors";
+                
+                // Position
+                let td = document.createElement('td');
+                td.className = "py-3 md:py-4 px-2 md:px-4 text-gray-400 font-mono";
+                td.textContent = index + 1;
+                tr.appendChild(td);
+                
+                // Constructor Name
+                td = document.createElement('td');
+                td.className = "py-3 md:py-4 px-2 md:px-4 font-bold text-white";
+                td.textContent = constructor.team;
+                tr.appendChild(td);
+                
+                // Drivers - POPRAWIONE: wyświetlanie wszystkich kierowców
+                td = document.createElement('td');
+                td.className = "py-3 md:py-4 px-2 md:px-4 text-sm text-gray-400";
+                
+                if (constructor.drivers && constructor.drivers.length > 0) {
+                    // Sprawdź czy to tablica stringów czy obiektów
+                    if (typeof constructor.drivers[0] === 'string') {
+                        td.textContent = constructor.drivers.join(', ');
+                    } else if (typeof constructor.drivers[0] === 'object') {
+                        // Jeśli to obiekty, wyciągnij tylko nazwy
+                        td.textContent = constructor.drivers.map(d => d.name || d).join(', ');
+                    } else {
+                        td.textContent = constructor.drivers.join(', ');
+                    }
+                } else {
+                    td.textContent = "Brak kierowców";
+                }
+                tr.appendChild(td);
+                
+                // Total Points
+                td = document.createElement('td');
+                td.className = "py-3 md:py-4 px-2 md:px-4 text-right text-[#8B0000] font-bold text-lg";
+                td.textContent = constructor.points;
+                tr.appendChild(td);
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Jeśli nie ma konstruktorów, pokaż komunikat
+            if (constructorStats.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="4" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH. DODAJ KIEROWCÓW W PANELU ADMINA.</td>`;
+                tbody.appendChild(tr);
+            }
         }
 
         // --- OPTIMIZED VIEW REFRESHING ---
@@ -3161,7 +3155,7 @@ Aktualny lider: ${reportData.leader}
                     break;
                 case 'championship':
                     renderDriversTable();
-                    renderConstructorsTable();
+                    renderConstructorsTable(); // Używamy poprawionej funkcji
                     break;
                 case 'results':
                     renderStageResults();
@@ -3293,7 +3287,7 @@ Aktualny lider: ${reportData.leader}
             if(viewName === 'championship') {
                 document.getElementById('nav-champ')?.classList.add('text-[#8B0000]');
                 renderDriversTable();
-                renderConstructorsTable();
+                renderConstructorsTable(); // Używamy poprawionej funkcji
             }
             if(viewName === 'results') {
                 document.getElementById('nav-results')?.classList.add('text-[#8B0000]');
@@ -3692,51 +3686,6 @@ Aktualny lider: ${reportData.leader}
             if (driverStats.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td colspan="${headers.length}" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH. DODAJ KIEROWCÓW W PANELU ADMINA.</td>`;
-                tbody.appendChild(tr);
-            }
-        }
-        
-        function renderConstructorsTable() {
-            const tbody = document.getElementById('constructors-ranking-body');
-            tbody.innerHTML = '';
-            
-            const constructorStats = calculateConstructorStats();
-
-            constructorStats.forEach((constructor, index) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-[#111] transition-colors";
-                
-                // Position
-                let td = document.createElement('td');
-                td.className = "py-3 md:py-4 px-2 md:px-4 text-gray-400 font-mono";
-                td.textContent = index + 1;
-                tr.appendChild(td);
-                
-                // Constructor Name
-                td = document.createElement('td');
-                td.className = "py-3 md:py-4 px-2 md:px-4 font-bold text-white";
-                td.textContent = constructor.team;
-                tr.appendChild(td);
-                
-                // Drivers
-                td = document.createElement('td');
-                td.className = "py-3 md:py-4 px-2 md:px-4 text-sm text-gray-400";
-                td.textContent = constructor.drivers.join(', ');
-                tr.appendChild(td);
-                
-                // Total Points
-                td = document.createElement('td');
-                td.className = "py-3 md:py-4 px-2 md:px-4 text-right text-[#8B0000] font-bold text-lg";
-                td.textContent = constructor.points;
-                tr.appendChild(td);
-                
-                tbody.appendChild(tr);
-            });
-            
-            // Jeśli nie ma konstruktorów, pokaż komunikat
-            if (constructorStats.length === 0) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td colspan="4" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH. DODAJ KIEROWCÓW W PANELU ADMINA.</td>`;
                 tbody.appendChild(tr);
             }
         }
@@ -4450,7 +4399,7 @@ Aktualny lider: ${reportData.leader}
             
             // Renderuj widoki
             renderDriversTable();
-            renderConstructorsTable();
+            renderConstructorsTable(); // Używamy poprawionej funkcji
             updateLeaders();
             updateTeamAssignments();
             router('home');
@@ -4484,4 +4433,8 @@ Aktualny lider: ${reportData.leader}
     </script>
 </body>
 </html>
+
+
+
+
 
