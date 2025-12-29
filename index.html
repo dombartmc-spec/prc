@@ -963,7 +963,7 @@
                         
                         <!-- New: Equalization Points -->
                         <div class="mt-4 p-3 bg-[#111] rounded-lg border-l-4 border-grey-600">
-                            <h4 class="font-mono text-sm font-bold text-white mb-2">🔄 Punkty Wyrównawcze (+4 PKT):</h4>
+                            <h4 class="font-mono text-sm font-bold text-white mb-2">🔄 Punkty Wyrównawcze (+5 PKT):</h4>
                             <ul class="font-mono text-xs text-gray-300 space-y-1">
                                 <li>• <strong>Przy 6 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe</li>
                                 <li>• <strong>Przy 8 graczach:</strong> Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe</li>
@@ -1535,7 +1535,7 @@
                             <strong class="text-white">SYSTEM PUNKTACJI:</strong><br>
                             1. Miejsca w rajdzie: 15-12-10-8-6-4-2-1<br>
                             2. Punkty za stan pojazdu: Czysty (+2), Lekkie uszk. (+1)<br>
-                            3. Punkty wyrównawcze: +4 po 3 etapach w określonych warunkach<br>
+                            3. Punkty wyrównawcze: +5 po 3 etapach w określonych warunkach<br>
                             4. DSQ - dyskwalifikacja z całego kraju, DNF - +20s do najgorszego czasu
                         </div>
                         <div class="technical-border bg-[#0F0F0F] p-4 md:p-6 rounded-xl">
@@ -2276,20 +2276,32 @@ Aktualny lider: ${reportData.leader}
                 const positions = firstTwoInput.split(',').map(p => parseInt(p.trim()));
                 if (positions.length === 2) {
                     const [pos1, pos2] = positions;
-                    const avgPosition = (pos1 + pos2) / 2;
                     
-                    // Symulacja dla 6, 8 i 10 graczy
-                    if (avgPosition > 5 && thirdPosition <= 3) {
-                        equalizationPoints = 4;
-                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>5) i 3. etap: ${thirdPosition} (≤3) = +4 PKT`;
-                    } else if (avgPosition > 6 && thirdPosition <= 4) {
-                        equalizationPoints = 4;
-                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>6) i 3. etap: ${thirdPosition} (≤4) = +4 PKT`;
-                    } else if (avgPosition > 7 && thirdPosition <= 5) {
-                        equalizationPoints = 4;
-                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)} (>7) i 3. etap: ${thirdPosition} (≤5) = +4 PKT`;
-                    } else {
-                        equalizationLogic = `Średnia z pierwszych 2 etapów: ${avgPosition.toFixed(1)}, 3. etap: ${thirdPosition} = 0 PKT wyrównawczych`;
+                    // Warunki zgodnie z zasadami
+                    const totalDrivers = Math.max(pos1, pos2, thirdPosition) + 3; // Estymacja liczby graczy
+                    
+                    if (totalDrivers === 6) {
+                        // Przy 6 graczach: Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe
+                        if (pos1 >= 6 && pos2 >= 6 && thirdPosition <= 3) {
+                            equalizationPoints = 5;
+                            equalizationLogic = `Pozycje w 1-2 etapach: ${pos1}, ${pos2} (≥6) i 3. etap: ${thirdPosition} (≤3) = +5 PKT`;
+                        }
+                    } else if (totalDrivers === 8) {
+                        // Przy 8 graczach: Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe
+                        if (pos1 >= 7 && pos2 >= 7 && thirdPosition <= 4) {
+                            equalizationPoints = 5;
+                            equalizationLogic = `Pozycje w 1-2 etapach: ${pos1}, ${pos2} (≥7) i 3. etap: ${thirdPosition} (≤4) = +5 PKT`;
+                        }
+                    } else if (totalDrivers >= 10) {
+                        // Przy 10 graczach: Jeśli w 2 pierwszych etapach miejsce poniżej 7. i w 3. etapie miejsce 5. lub wyższe
+                        if (pos1 >= 8 && pos2 >= 8 && thirdPosition <= 5) {
+                            equalizationPoints = 5;
+                            equalizationLogic = `Pozycje w 1-2 etapach: ${pos1}, ${pos2} (≥8) i 3. etap: ${thirdPosition} (≤5) = +5 PKT`;
+                        }
+                    }
+                    
+                    if (!equalizationPoints) {
+                        equalizationLogic = `Pozycje w 1-2 etapach: ${pos1}, ${pos2}, 3. etap: ${thirdPosition} = 0 PKT wyrównawczych`;
                     }
                 }
             }
@@ -2925,23 +2937,21 @@ Aktualny lider: ${reportData.leader}
                     return;
                 }
                 
-                const avgPositionFirstTwo = (pos0 + pos1) / 2;
-                
                 // Warunki zgodnie z zasadami
                 if (totalDrivers === 6) {
                     // Przy 6 graczach: Jeśli w 2 pierwszych etapach miejsce poniżej 5. i w 3. etapie miejsce 3. lub wyższe
-                    if (avgPositionFirstTwo > 5 && pos2 <= 3) {
-                        driver.equalizationPoints = 4;
+                    if (pos0 >= 6 && pos1 >= 6 && pos2 <= 3) {
+                        driver.equalizationPoints = 5;
                     }
                 } else if (totalDrivers === 8) {
                     // Przy 8 graczach: Jeśli w 2 pierwszych etapach miejsce poniżej 6. i w 3. etapie miejsce 4. lub wyższe
-                    if (avgPositionFirstTwo > 6 && pos2 <= 4) {
-                        driver.equalizationPoints = 4;
+                    if (pos0 >= 7 && pos1 >= 7 && pos2 <= 4) {
+                        driver.equalizationPoints = 5;
                     }
                 } else if (totalDrivers >= 10) {
                     // Przy 10 graczach: Jeśli w 2 pierwszych etapach miejsce poniżej 7. i w 3. etapie miejsce 5. lub wyższe
-                    if (avgPositionFirstTwo > 7 && pos2 <= 5) {
-                        driver.equalizationPoints = 4;
+                    if (pos0 >= 8 && pos1 >= 8 && pos2 <= 5) {
+                        driver.equalizationPoints = 5;
                     }
                 }
             });
@@ -3606,11 +3616,11 @@ Aktualny lider: ${reportData.leader}
                 }
                 
                 if (text === 'WYRÓW.') {
-                    th.classList.add('text-grey-400', 'font-bold');
+                    th.classList.add('text-purple-400', 'font-bold');
                 }
                 
                 if (text === 'BONUS') {
-                    th.classList.add('text-grey-400');
+                    th.classList.add('text-gray-400');
                 }
                 
                 if (index >= 3 && index < headers.length - 3) {
@@ -3669,7 +3679,7 @@ Aktualny lider: ${reportData.leader}
                 // Equalization points
                 td = document.createElement('td');
                 const hasEqualization = driver.equalization > 0;
-                td.className = `py-3 md:py-4 px-2 md:px-4 text-right font-mono ${hasEqualization ? 'text-grey-400 font-bold' : (isLeader ? 'text-gray-800' : 'text-gray-500')}`;
+                td.className = `py-3 md:py-4 px-2 md:px-4 text-right font-mono ${hasEqualization ? 'text-purple-400 font-bold' : (isLeader ? 'text-gray-800' : 'text-gray-500')}`;
                 td.textContent = hasEqualization ? `+${driver.equalization}` : '-';
                 tr.appendChild(td);
                 
