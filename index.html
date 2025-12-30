@@ -630,11 +630,17 @@
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-6 md:mb-8 gap-4 md:gap-6 border-b border-[#222] pb-4 md:pb-6">
                 <div class="mb-4 md:mb-0">
                     <h2 class="text-2xl md:text-3xl font-mono font-bold">WYNIKI SZCZEGÓŁOWE</h2>
-                    <p class="text-sm text-gray-400 font-mono mt-1">ANALIZA CZASÓW ODCINKÓW SPECJALNYOS</p>
+                    <p class="text-sm text-gray-400 font-mono mt-1">ANALIZA CZASÓW ODCINKÓW SPECJALNYCH</p>
                 </div>
                 
                 <!-- Controls -->
                 <div class="flex flex-col sm:flex-row gap-3 md:gap-4 w-full lg:w-auto">
+                    <!-- View Toggle -->
+                    <div class="flex items-center bg-[#111] border border-[#222] rounded-lg overflow-hidden w-full sm:w-auto">
+                        <button onclick="switchResultsView('stage')" id="results-view-stage" class="flex-1 text-sm font-mono px-4 py-2 bg-white text-black transition-all">ODCINEK</button>
+                        <button onclick="switchResultsView('country')" id="results-view-country" class="flex-1 text-sm font-mono px-4 py-2 text-gray-400 hover:text-white transition-all">KRAJ</button>
+                    </div>
+
                     <!-- Round Selector with Arrows -->
                     <div class="flex items-center bg-[#111] border border-[#222] rounded-lg overflow-hidden w-full sm:w-auto">
                         <button onclick="changeRound(-1)" class="px-3 py-2 text-gray-400 hover:text-white hover:bg-[#222] border-r border-[#222]">&lt;</button>
@@ -644,8 +650,8 @@
                         <button onclick="changeRound(1)" class="px-3 py-2 text-gray-400 hover:text-white hover:bg-[#222] border-l border-[#222]">&gt;</button>
                     </div>
 
-                    <!-- Stage Selector with Arrows -->
-                    <div class="flex items-center bg-[#111] border border-[#222] rounded-lg overflow-hidden w-full sm:w-auto">
+                    <!-- Stage Selector with Arrows (visible only for stage view) -->
+                    <div id="results-stage-container" class="flex items-center bg-[#111] border border-[#222] rounded-lg overflow-hidden w-full sm:w-auto">
                         <button onclick="changeStage(-1)" class="px-3 py-2 text-gray-400 hover:text-white hover:bg-[#222] border-r border-[#222]">&lt;</button>
                         <select id="res-stage-select" class="bg-transparent text-white text-sm font-mono py-2 px-4 outline-none appearance-none min-w-[120px] md:min-w-[150px] text-center cursor-pointer">
                             <!-- JS GENERATED -->
@@ -655,15 +661,12 @@
                 </div>
             </div>
 
+            <!-- Results Table (different content based on view) -->
             <div class="w-full overflow-x-auto bg-[#0F0F0F] technical-border rounded-xl">
                 <table class="w-full text-left text-responsive">
                     <thead>
-                        <tr class="font-mono text-sm text-gray-400 border-b border-[#222] bg-[#151515]">
-                            <th class="py-3 pl-4 w-12 md:w-16">#</th>
-                            <th class="py-3">KIEROWCA</th>
-                            <th class="py-3 text-right">CZAS OS</th>
-                            <th class="py-3 text-right">RÓŻNICA</th>
-                            <th class="py-3 text-right pr-4">PKT BONUSOWE</th>
+                        <tr id="results-table-header" class="font-mono text-sm text-gray-400 border-b border-[#222] bg-[#151515]">
+                            <!-- Dynamic headers will be inserted by JS -->
                         </tr>
                     </thead>
                     <tbody class="font-mono text-sm md:text-base divide-y divide-[#1a1a1a]" id="stage-results-body">
@@ -1600,6 +1603,7 @@
         // --- OPTIMIZED DATA STORE WITH CACHE ---
         const state = {
             view: 'home',
+            resultsView: 'stage', // 'stage' or 'country'
             isLoggedIn: false,
             currentLeader: 'driver',
             leaderRotationInterval: null,
@@ -2569,6 +2573,12 @@
             if(viewName === 'results') {
                 document.getElementById('nav-results')?.classList.add('text-[#8B0000]');
                 initResultsView();
+                // Set initial view state
+                if (state.resultsView === 'country') {
+                    switchResultsView('country');
+                } else {
+                    switchResultsView('stage');
+                }
             }
             if(viewName === 'teams') {
                 document.getElementById('nav-teams')?.classList.add('text-[#8B0000]');
@@ -2633,8 +2643,28 @@
             if(moduleName === 'drivers') renderAdminDrivers();
         }
 
-        // --- PUBLIC RESULTS LOGIC ---
+        // --- RESULTS VIEW LOGIC WITH COUNTRY SUMMARY ---
         
+        function switchResultsView(view) {
+            state.resultsView = view;
+            
+            const stageBtn = document.getElementById('results-view-stage');
+            const countryBtn = document.getElementById('results-view-country');
+            const stageContainer = document.getElementById('results-stage-container');
+            
+            if (view === 'stage') {
+                stageBtn.className = "flex-1 text-sm font-mono px-4 py-2 bg-white text-black transition-all";
+                countryBtn.className = "flex-1 text-sm font-mono px-4 py-2 text-gray-400 hover:text-white transition-all";
+                stageContainer.classList.remove('hidden');
+                renderStageResults();
+            } else {
+                stageBtn.className = "flex-1 text-sm font-mono px-4 py-2 text-gray-400 hover:text-white transition-all";
+                countryBtn.className = "flex-1 text-sm font-mono px-4 py-2 bg-white text-black transition-all";
+                stageContainer.classList.add('hidden');
+                renderCountrySummary();
+            }
+        }
+
         function initResultsView() {
             const roundSelect = document.getElementById('res-round-select');
             
@@ -2649,13 +2679,21 @@
             if(!roundSelect.value && state.rounds.length > 0) roundSelect.value = 0;
             
             roundSelect.onchange = () => {
-                populateStages(roundSelect.value);
-                renderStageResults();
+                if (state.resultsView === 'stage') {
+                    populateStages(roundSelect.value);
+                    renderStageResults();
+                } else {
+                    renderCountrySummary();
+                }
             };
 
             if (state.rounds.length > 0) {
-                populateStages(roundSelect.value);
-                renderStageResults();
+                if (state.resultsView === 'stage') {
+                    populateStages(roundSelect.value);
+                    renderStageResults();
+                } else {
+                    renderCountrySummary();
+                }
             }
         }
 
@@ -2691,11 +2729,18 @@
             if(newIdx >= state.rounds.length) newIdx = 0;
             
             sel.value = newIdx;
-            populateStages(newIdx);
-            renderStageResults();
+            
+            if (state.resultsView === 'stage') {
+                populateStages(newIdx);
+                renderStageResults();
+            } else {
+                renderCountrySummary();
+            }
         }
 
         function changeStage(dir) {
+            if (state.resultsView !== 'stage') return;
+            
             const sel = document.getElementById('res-stage-select');
             const roundIdx = parseInt(document.getElementById('res-round-select').value);
             
@@ -2713,6 +2758,17 @@
 
         function renderStageResults() {
             const tbody = document.getElementById('stage-results-body');
+            const header = document.getElementById('results-table-header');
+            
+            // Set headers for stage view
+            header.innerHTML = `
+                <th class="py-3 pl-4 w-12 md:w-16">#</th>
+                <th class="py-3">KIEROWCA</th>
+                <th class="py-3 text-right">CZAS OS</th>
+                <th class="py-3 text-right">RÓŻNICA</th>
+                <th class="py-3 text-right pr-4">PKT BONUSOWE</th>
+            `;
+            
             tbody.innerHTML = '';
             
             const rIdx = parseInt(document.getElementById('res-round-select').value);
@@ -2844,6 +2900,142 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderCountrySummary() {
+            const tbody = document.getElementById('stage-results-body');
+            const header = document.getElementById('results-table-header');
+            const rIdx = parseInt(document.getElementById('res-round-select').value);
+            
+            if (isNaN(rIdx)) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500 font-mono text-sm">Wybierz rajd (kraj)</td></tr>`;
+                return;
+            }
+
+            const round = state.rounds[rIdx];
+            
+            // Set headers for country view
+            header.innerHTML = `
+                <th class="py-3 pl-4 w-12 md:w-16">#</th>
+                <th class="py-3">KIEROWCA</th>
+                <th class="py-3 text-right">CZAS KRAJU</th>
+                <th class="py-3 text-right">RÓŻNICA</th>
+                <th class="py-3 text-right pr-4">PKT KRAJ</th>
+            `;
+
+            tbody.innerHTML = '';
+            
+            // Get all results for this round
+            const roundResults = state.results.filter(res => res.r === rIdx);
+            
+            // Group results by driver
+            const driverResults = {};
+            
+            roundResults.forEach(result => {
+                if (!driverResults[result.d]) {
+                    driverResults[result.d] = {
+                        times: [],
+                        totalTime: 0,
+                        hasDSQ: false,
+                        dnfCount: 0
+                    };
+                }
+                
+                if (result.time === "DSQ") {
+                    driverResults[result.d].hasDSQ = true;
+                } else if (result.time === "DNF") {
+                    driverResults[result.d].dnfCount++;
+                } else if (typeof result.ms === 'number') {
+                    driverResults[result.d].times.push(result.ms);
+                    driverResults[result.d].totalTime += result.ms;
+                }
+            });
+            
+            // Find worst time among normal results for DNF penalty calculation
+            let worstNormalTime = 0;
+            Object.values(driverResults).forEach(driverResult => {
+                driverResult.times.forEach(time => {
+                    if (time > worstNormalTime) worstNormalTime = time;
+                });
+            });
+            
+            // Calculate final times for each driver
+            const driverTimes = [];
+            
+            Object.keys(driverResults).forEach(driverId => {
+                const driverResult = driverResults[driverId];
+                
+                if (driverResult.hasDSQ) {
+                    driverTimes.push({
+                        driverId: parseInt(driverId),
+                        totalMs: Infinity,
+                        isDSQ: true
+                    });
+                } else {
+                    let totalTime = driverResult.totalTime;
+                    
+                    // Add DNF penalties
+                    for (let i = 0; i < driverResult.dnfCount; i++) {
+                        totalTime += worstNormalTime + 20000;
+                    }
+                    
+                    driverTimes.push({
+                        driverId: parseInt(driverId),
+                        totalMs: totalTime,
+                        isDSQ: false
+                    });
+                }
+            });
+            
+            // Sort by time (DSQ at the end)
+            driverTimes.sort((a, b) => {
+                if (a.isDSQ && b.isDSQ) return 0;
+                if (a.isDSQ) return 1;
+                if (b.isDSQ) return -1;
+                return a.totalMs - b.totalMs;
+            });
+            
+            const winnerTime = driverTimes.find(d => !d.isDSQ)?.totalMs || 0;
+            const pointsSystem = [15, 12, 10, 8, 6, 4, 2, 1];
+            
+            driverTimes.forEach((driverTime, index) => {
+                const driver = state.drivers.find(d => d.id === driverTime.driverId);
+                if (!driver) return;
+                
+                const isDSQ = driverTime.isDSQ;
+                const totalTime = driverTime.totalMs;
+                
+                let timeDisplay, diffDisplay;
+                if (isDSQ) {
+                    timeDisplay = '<span class="text-red-500">DSQ</span>';
+                    diffDisplay = '<span class="text-red-500">DSQ</span>';
+                } else {
+                    timeDisplay = formatTimeForDisplay(totalTime);
+                    if (index === 0) {
+                        diffDisplay = '-';
+                    } else {
+                        diffDisplay = formatTimeDiff(totalTime - winnerTime);
+                    }
+                }
+                
+                const points = index < pointsSystem.length ? pointsSystem[index] : 0;
+                
+                const tr = document.createElement('tr');
+                tr.className = index === 0 ? "bg-zinc-200 text-black" : "hover:bg-[#151515] transition-colors text-gray-300";
+                
+                tr.innerHTML = `
+                    <td class="py-3 pl-4 text-sm ${index === 0 ? 'text-black font-bold' : 'text-gray-500'}">${index + 1}</td>
+                    <td class="py-3 font-bold font-mono ${index === 0 ? 'text-black' : 'text-gray-300'}">${driver.name}</td>
+                    <td class="py-3 text-right font-mono tracking-wide ${index === 0 ? 'text-black' : (isDSQ ? 'text-red-500' : 'text-white')}">${timeDisplay}</td>
+                    <td class="py-3 text-right text-sm font-mono ${index === 0 ? 'text-gray-800' : (isDSQ ? 'text-red-500' : 'text-gray-500')}">${diffDisplay}</td>
+                    <td class="py-3 text-right pr-4 font-mono text-sm ${index === 0 ? 'text-gray-800' : 'text-gray-400'}">${points}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            if (driverTimes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500 font-mono text-sm">BRAK DANYCH DLA TEGO KRAJU</td></tr>`;
+            }
         }
 
         // --- PUBLIC CHAMPIONSHIP LOGIC ---
@@ -4258,7 +4450,11 @@ Aktualny lider: ${reportData.leader}
                     renderConstructorsTable();
                     break;
                 case 'results':
-                    renderStageResults();
+                    if (state.resultsView === 'stage') {
+                        renderStageResults();
+                    } else {
+                        renderCountrySummary();
+                    }
                     break;
                 case 'teams':
                     updateTeamAssignments();
