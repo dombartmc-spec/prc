@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRC WINTER RALLY CUP 2025</title>
+    <title>PRC'2025</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -521,7 +521,7 @@
                     <!-- Content -->
                     <div class="relative z-10 text-center p-4 md:p-8 max-w-3xl mx-auto">
                         <h1 class="text-2xl md:text-5xl font-mono font-bold tracking-tighter mb-4 text-white leading-tight drop-shadow-lg">
-                            WRC WINTER RALLY CUP<br>2025
+                            FIA POTATO RALLY<br>CHAMPIONSHIP
                         </h1>
                         
                         <div class="h-[1px] w-24 bg-[#8B0000] mx-auto my-4 md:my-6"></div>
@@ -585,7 +585,7 @@
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 border-b border-[#222] pb-4">
                 <div class="mb-4 md:mb-0">
                     <h2 class="text-2xl md:text-3xl font-mono font-bold">KLASYFIKACJA GENERALNA</h2>
-                    <p class="text-sm text-gray-400 font-mono mt-1">WRC WINTER RALLY CUP 2025</p>
+                    <p class="text-sm text-gray-400 font-mono mt-1">FIA POTATO RALLY CHAMPIONSHIP</p>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-[#111] p-1 border border-[#222] rounded-lg">
                     <button onclick="switchTab('drivers')" id="btn-drivers" class="text-sm font-mono px-4 py-2 bg-white text-black transition-all rounded-md btn-full-mobile">KIEROWCY</button>
@@ -900,7 +900,7 @@
         <section id="view-rules" class="hidden fade-in max-w-7xl mx-auto px-4 py-8 md:py-12 container-padding">
             <div class="mb-6 md:mb-8">
                 <h2 class="text-2xl md:text-3xl font-mono font-bold">ZASADY TURNIEJU</h2>
-                <p class="text-sm text-gray-400 font-mono mt-1">WRC WINTER RALLY CUP 2025</p>
+                <p class="text-sm text-gray-400 font-mono mt-1">FIA POTATO RALLY CHAMPIONSHIP</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
@@ -1064,11 +1064,11 @@
                 <form onsubmit="handleLogin(event)" class="space-y-6">
                     <div>
                         <label class="block text-sm font-mono text-gray-400 mb-2">IDENTYFIKATOR</label>
-                        <input type="text" id="login-username" placeholder="Wprowadź identyfikator" class="input-dark bg-[#080808] border-[#333] focus:border-[#8B0000]">
+                        <input type="text" id="login-usx" placeholder="Wprowadź identyfikator" class="input-dark bg-[#080808] border-[#333] focus:border-[#8B0000]">
                     </div>
                     <div>
                         <label class="block text-sm font-mono text-gray-400 mb-2">HASŁO DOSTĘPU</label>
-                        <input type="password" id="login-password" placeholder="Wprowadź hasło" class="input-dark bg-[#080808] border-[#333] focus:border-[#8B0000]">
+                        <input type="psx" id="login-psx" placeholder="Wprowadź hasło" class="input-dark bg-[#080808] border-[#333] focus:border-[#8B0000]">
                     </div>
                     <div id="login-error" class="hidden text-xs text-red-500 font-mono p-2 bg-red-900/20 border border-red-900/30 rounded-md">
                         Nieprawidłowy login lub hasło
@@ -1583,7 +1583,7 @@
 
     <footer class="mt-8 md:mt-12 border-t border-[#222] py-6 md:py-8 bg-[#050505] relative z-10">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">WRC WINTER RALLY CUP 2025 // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
+            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">FIA POTATO RALLY CHAMPIONSHIP // OFFICIAL TOURNAMENT SYSTEM // CLOUD SYNC</p>
         </div>
     </footer>
 
@@ -1714,7 +1714,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': CLOUD_CONFIG.API_KEY,
-                        'X-Bin-Name': 'WRC Winter Rally Cup 2025 Data'
+                        'X-Bin-Name': 'FIA POTATO RALLY CHAMPIONSHIP Data'
                     },
                     body: JSON.stringify(dataToSave)
                 });
@@ -1934,7 +1934,7 @@
             };
             
             const reportText = `
-RAPORT TURNIEJU WRC WINTER RALLY CUP 2025
+RAPORT TURNIEJU FIA POTATO RALLY CHAMPIONSHIP
 =========================================
 Wygenerowano: ${reportData.generated}
 
@@ -4287,11 +4287,11 @@ Aktualny lider: ${reportData.leader}
 
         function handleLogin(e) {
             e.preventDefault();
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
+            const usx = document.getElementById('login-usx').value;
+            const psx = document.getElementById('login-psx').value;
             const errorEl = document.getElementById('login-error');
             
-            if (username === "admin" && password === "prc2025") {
+            if (usx === "admin" && psx === "prc3!") {
                 state.isLoggedIn = true;
                 errorEl.classList.add('hidden');
                 router('admin');
@@ -4303,15 +4303,15 @@ Aktualny lider: ${reportData.leader}
             } else {
                 errorEl.textContent = "Nieprawidłowy login lub hasło.";
                 errorEl.classList.remove('hidden');
-                document.getElementById('login-password').value = '';
+                document.getElementById('login-psx').value = '';
             }
         }
 
         function logout() {
             state.isLoggedIn = false;
             router('home');
-            document.getElementById('login-username').value = '';
-            document.getElementById('login-password').value = '';
+            document.getElementById('login-usx').value = '';
+            document.getElementById('login-psx').value = '';
             document.getElementById('login-error').classList.add('hidden');
         }
 
@@ -4414,3 +4414,4 @@ Aktualny lider: ${reportData.leader}
     </script>
 </body>
 </html>
+
