@@ -1948,6 +1948,18 @@
             // Get all results for this round
             const roundResults = state.results.filter(res => res.r === roundIndex);
             
+            // Find worst normal time per stage for DNF penalty calculation
+            const worstNormalTimesPerStage = {};
+            
+            roundResults.forEach(result => {
+                if (result.time !== "DSQ" && result.time !== "DNF" && typeof result.ms === 'number') {
+                    const stageIdx = result.s;
+                    if (!worstNormalTimesPerStage[stageIdx] || result.ms > worstNormalTimesPerStage[stageIdx]) {
+                        worstNormalTimesPerStage[stageIdx] = result.ms;
+                    }
+                }
+            });
+            
             // Group results by driver
             const driverResults = {};
             
@@ -1957,26 +1969,18 @@
                         times: [],
                         totalTime: 0,
                         hasDSQ: false,
-                        dnfCount: 0
+                        dnfStages: []
                     };
                 }
                 
                 if (result.time === "DSQ") {
                     driverResults[result.d].hasDSQ = true;
                 } else if (result.time === "DNF") {
-                    driverResults[result.d].dnfCount++;
+                    driverResults[result.d].dnfStages.push(result.s);
                 } else if (typeof result.ms === 'number') {
-                    driverResults[result.d].times.push(result.ms);
+                    driverResults[result.d].times.push({stage: result.s, time: result.ms});
                     driverResults[result.d].totalTime += result.ms;
                 }
-            });
-            
-            // Find worst time among normal results for DNF penalty calculation
-            let worstNormalTime = 0;
-            Object.values(driverResults).forEach(driverResult => {
-                driverResult.times.forEach(time => {
-                    if (time > worstNormalTime) worstNormalTime = time;
-                });
             });
             
             // Calculate final times for each driver
@@ -1994,10 +1998,15 @@
                 } else {
                     let totalTime = driverResult.totalTime;
                     
-                    // Add DNF penalties
-                    for (let i = 0; i < driverResult.dnfCount; i++) {
-                        totalTime += worstNormalTime + 20000;
-                    }
+                    // Add DNF penalties (worst normal time in that stage + 20 seconds)
+                    driverResult.dnfStages.forEach(stageIdx => {
+                        if (worstNormalTimesPerStage[stageIdx]) {
+                            totalTime += worstNormalTimesPerStage[stageIdx] + 20000; // 20 seconds penalty
+                        } else {
+                            // If no normal times in this stage, use a default large time
+                            totalTime += 300000; // 5 minutes default
+                        }
+                    });
                     
                     driverTimes.push({
                         driverId: parseInt(driverId),
@@ -2221,6 +2230,10 @@
                 return timeStr.toUpperCase();
             }
             
+            if (!timeStr || !timeStr.includes(':') || !timeStr.includes('.')) {
+                throw new Error("Nieprawidłowy format czasu. Użyj MM:SS.ms");
+            }
+            
             const parts = timeStr.split(':');
             if (parts.length < 2) throw new Error("Format");
             const min = parseInt(parts[0]);
@@ -2233,6 +2246,7 @@
         function formatTimeDiff(msDiff) {
             if (msDiff === "DSQ") return "DSQ";
             if (msDiff === "DNF") return "DNF";
+            if (msDiff === Infinity) return "DSQ";
             
             const sec = Math.floor(msDiff / 1000);
             const ms = msDiff % 1000;
@@ -2240,7 +2254,7 @@
         }
 
         function formatTimeForDisplay(ms) {
-            if (ms === "DSQ") return '<span class="status-dsq-text">DSQ</span>';
+            if (ms === "DSQ" || ms === Infinity) return '<span class="status-dsq-text">DSQ</span>';
             if (ms === "DNF") return '<span class="status-dnf-text">DNF</span>';
             
             const totalSeconds = Math.floor(ms / 1000);
@@ -2281,11 +2295,6 @@
             if (timeStr === "DSQ" || timeStr === "DNF") {
                 msValue = timeStr;
             } else {
-                if (!timeStr.includes(':') || !timeStr.includes('.')) {
-                    showAdminStatus("Wprowadź poprawny czas (MM:SS.ms) lub DSQ/DNF", true);
-                    return;
-                }
-                
                 try {
                     msValue = parseTime(timeStr);
                 } catch(e) {
@@ -2347,11 +2356,6 @@
                 if (timeStr === "DSQ" || timeStr === "DNF") {
                     msValue = timeStr;
                 } else {
-                    if (!timeStr.includes(':') || !timeStr.includes('.')) {
-                        errorCount++;
-                        continue;
-                    }
-                    
                     try {
                         msValue = parseTime(timeStr);
                     } catch(e) {
@@ -2413,11 +2417,6 @@
             if (timeStr === "DSQ" || timeStr === "DNF") {
                 msValue = timeStr;
             } else {
-                if (!timeStr.includes(':') || !timeStr.includes('.')) {
-                    showAdminStatus("Wprowadź poprawny czas (MM:SS.ms) lub DSQ/DNF", true);
-                    return;
-                }
-                
                 try {
                     msValue = parseTime(timeStr);
                 } catch(e) {
@@ -2795,10 +2794,11 @@
                 }
             });
             
+            // Find worst normal time (excluding DSQ/DNF)
             let worstNormalTime = 0;
-            if (normalResults.length > 0) {
-                worstNormalTime = Math.max(...normalResults.map(res => res.ms));
-            }
+            normalResults.forEach(res => {
+                if (res.ms > worstNormalTime) worstNormalTime = res.ms;
+            });
             
             const allResults = [];
             
@@ -2811,13 +2811,14 @@
                 });
             });
             
+            // DNF: worst normal time + 20 seconds penalty
             dnfResults.forEach(res => {
-                const computedTime = worstNormalTime + 20000;
+                const penaltyTime = worstNormalTime + 20000; // 20 seconds = 20000ms
                 allResults.push({
                     ...res,
-                    computedTime: computedTime,
+                    computedTime: penaltyTime,
                     type: 'dnf',
-                    displayTime: computedTime
+                    displayTime: penaltyTime
                 });
             });
             
@@ -2851,14 +2852,14 @@
                 let diffClass = '';
                 
                 if (res.type === 'dsq') {
-                    timeDisplay = '<span class="text-red-500">DSQ</span>';
-                    diff = '<span class="text-red-500">DSQ</span>';
+                    timeDisplay = '<span class="status-dsq-text">DSQ</span>';
+                    diff = '<span class="status-dsq-text">DSQ</span>';
                     rowClass = "hover:bg-[#151515] transition-colors";
-                    timeClass = 'text-red-500';
-                    diffClass = 'text-red-500';
+                    timeClass = 'status-dsq-text';
+                    diffClass = 'status-dsq-text';
                 } else if (res.type === 'dnf') {
                     const formattedTime = formatTimeForDisplay(res.displayTime);
-                    timeDisplay = `${formattedTime}<span class="text-yellow-500 text-xs ml-1">(DNF)</span>`;
+                    timeDisplay = `${formattedTime}<span class="status-dnf-text text-xs ml-1">(DNF)</span>`;
                     
                     if (i === 0) {
                         diff = '-';
@@ -2867,7 +2868,7 @@
                         diff = formatTimeDiff(diffMs);
                     }
                     rowClass = "hover:bg-[#151515] transition-colors";
-                    timeClass = 'text-white';
+                    timeClass = 'status-dnf-text';
                     diffClass = 'text-gray-500';
                 } else {
                     timeDisplay = formatTimeForDisplay(res.displayTime);
@@ -2928,6 +2929,18 @@
             // Get all results for this round
             const roundResults = state.results.filter(res => res.r === rIdx);
             
+            // Find worst normal time per stage for DNF penalty calculation
+            const worstNormalTimesPerStage = {};
+            
+            roundResults.forEach(result => {
+                if (result.time !== "DSQ" && result.time !== "DNF" && typeof result.ms === 'number') {
+                    const stageIdx = result.s;
+                    if (!worstNormalTimesPerStage[stageIdx] || result.ms > worstNormalTimesPerStage[stageIdx]) {
+                        worstNormalTimesPerStage[stageIdx] = result.ms;
+                    }
+                }
+            });
+            
             // Group results by driver
             const driverResults = {};
             
@@ -2937,26 +2950,18 @@
                         times: [],
                         totalTime: 0,
                         hasDSQ: false,
-                        dnfCount: 0
+                        dnfStages: []
                     };
                 }
                 
                 if (result.time === "DSQ") {
                     driverResults[result.d].hasDSQ = true;
                 } else if (result.time === "DNF") {
-                    driverResults[result.d].dnfCount++;
+                    driverResults[result.d].dnfStages.push(result.s);
                 } else if (typeof result.ms === 'number') {
-                    driverResults[result.d].times.push(result.ms);
+                    driverResults[result.d].times.push({stage: result.s, time: result.ms});
                     driverResults[result.d].totalTime += result.ms;
                 }
-            });
-            
-            // Find worst time among normal results for DNF penalty calculation
-            let worstNormalTime = 0;
-            Object.values(driverResults).forEach(driverResult => {
-                driverResult.times.forEach(time => {
-                    if (time > worstNormalTime) worstNormalTime = time;
-                });
             });
             
             // Calculate final times for each driver
@@ -2974,10 +2979,15 @@
                 } else {
                     let totalTime = driverResult.totalTime;
                     
-                    // Add DNF penalties
-                    for (let i = 0; i < driverResult.dnfCount; i++) {
-                        totalTime += worstNormalTime + 20000;
-                    }
+                    // Add DNF penalties (worst normal time in that stage + 20 seconds)
+                    driverResult.dnfStages.forEach(stageIdx => {
+                        if (worstNormalTimesPerStage[stageIdx]) {
+                            totalTime += worstNormalTimesPerStage[stageIdx] + 20000; // 20 seconds penalty
+                        } else {
+                            // If no normal times in this stage, use a default large time
+                            totalTime += 300000; // 5 minutes default
+                        }
+                    });
                     
                     driverTimes.push({
                         driverId: parseInt(driverId),
@@ -3007,8 +3017,8 @@
                 
                 let timeDisplay, diffDisplay;
                 if (isDSQ) {
-                    timeDisplay = '<span class="text-red-500">DSQ</span>';
-                    diffDisplay = '<span class="text-red-500">DSQ</span>';
+                    timeDisplay = '<span class="status-dsq-text">DSQ</span>';
+                    diffDisplay = '<span class="status-dsq-text">DSQ</span>';
                 } else {
                     timeDisplay = formatTimeForDisplay(totalTime);
                     if (index === 0) {
@@ -3026,8 +3036,8 @@
                 tr.innerHTML = `
                     <td class="py-3 pl-4 text-sm ${index === 0 ? 'text-black font-bold' : 'text-gray-500'}">${index + 1}</td>
                     <td class="py-3 font-bold font-mono ${index === 0 ? 'text-black' : 'text-gray-300'}">${driver.name}</td>
-                    <td class="py-3 text-right font-mono tracking-wide ${index === 0 ? 'text-black' : (isDSQ ? 'text-red-500' : 'text-white')}">${timeDisplay}</td>
-                    <td class="py-3 text-right text-sm font-mono ${index === 0 ? 'text-gray-800' : (isDSQ ? 'text-red-500' : 'text-gray-500')}">${diffDisplay}</td>
+                    <td class="py-3 text-right font-mono tracking-wide ${index === 0 ? 'text-black' : (isDSQ ? 'status-dsq-text' : 'text-white')}">${timeDisplay}</td>
+                    <td class="py-3 text-right text-sm font-mono ${index === 0 ? 'text-gray-800' : (isDSQ ? 'status-dsq-text' : 'text-gray-500')}">${diffDisplay}</td>
                     <td class="py-3 text-right pr-4 font-mono text-sm ${index === 0 ? 'text-gray-800' : 'text-gray-400'}">${points}</td>
                 `;
                 tbody.appendChild(tr);
@@ -3437,6 +3447,7 @@
             tbody.innerHTML = '';
             const filtered = state.results.filter(res => res.r === rIdx && res.s === sIdx);
             
+            // Sort results for display
             filtered.sort((a,b) => {
                 if (a.time === "DSQ") return 1;
                 if (b.time === "DSQ") return -1;
